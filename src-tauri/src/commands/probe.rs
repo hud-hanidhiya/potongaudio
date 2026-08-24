@@ -130,11 +130,11 @@ pub async fn probe_audio_file_impl(
 }
 
 // ---------------------------------------------------------------------
-// ⚠️ BELUM TERVERIFIKASI COMPILE — sama seperti catatan di commands/export.rs,
-// wrapper `#[tauri::command]` di bawah butuh runtime Tauri sungguhan
-// (tauri_plugin_shell untuk resolve path sidecar ffprobe) yang tidak bisa
-// dicompile di sandbox pembuatan dokumen ini. `parse_ffprobe_json` di atas
-// (bagian yang sesungguhnya rawan bug) SUDAH teruji penuh lewat 7 unit test.
+// STATUS: command `probe_audio_file` di bawah terverifikasi compile +
+// clippy `-D warnings` (`--features tauri-runtime`) dan dieksekusi oleh
+// CI dua OS. `parse_ffprobe_json` (bagian yang rawan bug) teruji penuh
+// lewat unit test. Gate `tauri-runtime` dipertahankan agar `cargo test`
+// default tetap cepat tanpa dependency Tauri.
 // ---------------------------------------------------------------------
 
 #[cfg(feature = "tauri-runtime")]
