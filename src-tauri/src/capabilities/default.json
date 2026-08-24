@@ -10,6 +10,13 @@
     "dialog:allow-save",
 
     {
+      "identifier": "fs:read-file",
+      "allow": [
+        { "path": "**" }
+      ]
+    },
+
+    {
       "identifier": "shell:allow-execute",
       "allow": [
         { "name": "binaries/ffmpeg", "sidecar": true },

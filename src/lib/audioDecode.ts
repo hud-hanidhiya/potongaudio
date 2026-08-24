@@ -30,16 +30,15 @@ export interface DecodedAudio {
  * asumsinya file sudah ada di disk, path didapat dari native file picker
  * `pickOpenAudioFile()` di ipc.ts, bukan drag-drop File object langsung).
  *
- * Catatan: pembacaan file dari path lokal butuh Tauri fs plugin
- * (`@tauri-apps/plugin-fs`, method `readFile`) untuk mendapat bytes-nya
- * sebelum di-decode Web Audio API. Ditulis sebagai TODO eksplisit di sini
- * karena dependency itu belum diinstal di skeleton ini.
+ * Membaca bytes file via `@tauri-apps/plugin-fs` `readFile` (scope `**` di
+ * `tauri.conf.json` + izin `fs:read-file` di capabilities), lalu decode
+ * Web Audio API. Bytes yang sama dipakai ulang oleh WaveSurfer (blob URL)
+ * supaya file tidak dibaca dua kali dari disk.
  */
-export async function decodeAudioFromPath(_filePath: string): Promise<DecodedAudio> {
-  throw new Error(
-    'TODO(Fase 2, T2.1): baca bytes file via @tauri-apps/plugin-fs readFile(), ' +
-      'lalu decode dengan decodeAudioFromBytes() di bawah.'
-  );
+export async function decodeAudioFromPath(filePath: string): Promise<DecodedAudio> {
+  const { readFile } = await import('@tauri-apps/plugin-fs');
+  const bytes = await readFile(filePath);
+  return decodeAudioFromBytes(new Uint8Array(bytes).buffer);
 }
 
 export async function decodeAudioFromBytes(bytes: ArrayBuffer): Promise<DecodedAudio> {

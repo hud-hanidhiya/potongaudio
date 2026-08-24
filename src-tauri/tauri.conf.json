@@ -40,5 +40,11 @@
     ],
 
     "externalBin": ["binaries/ffmpeg", "binaries/ffprobe"]
+  },
+
+  "plugins": {
+    "fs": {
+      "scope": [{ "path": "**" }]
+    }
   }
 }

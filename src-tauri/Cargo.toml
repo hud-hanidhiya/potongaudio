@@ -30,6 +30,7 @@ tauri-build = { version = "2", features = [], optional = true }
 tauri = { version = "2", features = [], optional = true }
 tauri-plugin-shell = { version = "2", optional = true }
 tauri-plugin-dialog = { version = "2", optional = true }
+tauri-plugin-fs = { version = "2", optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 async-trait = "0.1"
@@ -41,7 +42,7 @@ tokio = { version = "1", features = ["full"] }
 # (`cargo tauri dev` / `cargo tauri build`), feature ini WAJIB aktif —
 # lihat [package.metadata] di bawah untuk cara Tauri CLI mengaktifkannya
 # otomatis, atau jalankan manual dengan `cargo build --features tauri-runtime`.
-tauri-runtime = ["dep:tauri", "dep:tauri-plugin-shell", "dep:tauri-plugin-dialog", "dep:tauri-build"]
+tauri-runtime = ["dep:tauri", "dep:tauri-plugin-shell", "dep:tauri-plugin-dialog", "dep:tauri-plugin-fs", "dep:tauri-build"]
 
 [package.metadata.tauri-runtime-note]
 # Tauri CLI (`cargo tauri dev`/`build`) secara default membaca [features]

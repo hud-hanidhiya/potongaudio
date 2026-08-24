@@ -34,7 +34,10 @@
 
 | # | Task | Target file | Done criteria | Status |
 |---|---|---|---|:---:|
-| T2.x | WaveSurfer.js + region trim interaktif | `src/components/workspace/WaveformView.tsx` | — | ☐ |
+| T2.1 | Decode audio dari path lokal (plugin-fs) + pasang dep WaveSurfer | `src/lib/audioDecode.ts`, `package.json`, `src-tauri/{Cargo.toml,src/lib.rs,src/capabilities/default.json,tauri.conf.json}` | `npm run build` + `cargo build --features tauri-runtime` hijau; `decodeAudioFromPath` tidak throw | ☑ |
+| T2.2 | Render waveform via WaveSurfer | `src/components/workspace/WaveformView.tsx` | Waveform tampil (bukan placeholder) setelah file dimuat; `npm run build` hijau | ☐ |
+| T2.3 | Region trim drag (RegionsPlugin) + two-way sync store | `src/components/workspace/WaveformView.tsx` | Drag handle mengubah `region` di store; edit TimeInput mengubah region di waveform | ☐ |
+| T2.4 | Polish: interact:false, styling token, clamp durasi | `src/components/workspace/WaveformView.tsx` | Klik waveform tidak autoplay bentrok Preview; region di-clamp ke durasi | ☐ |
 | T3.x | Wiring backend Rust penuh ke UI | `src/lib/ipc.ts` | — | ☐ |
 | T4.x | Integrasi frontend↔backend penuh | — | — | ☐ |
 | T5.x | Packaging & release | `.github/workflows/` | — | ☐ |
