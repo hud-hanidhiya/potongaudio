@@ -30,7 +30,7 @@
 | T1.7 (baru) | Swap CI + script lokal ke build FFmpeg LGPL | `.github/workflows/*.yml`, script setup lokal (T1.6) | Asset name diganti dari `*-gpl.tar.xz`/`.zip` ke `*-lgpl.tar.xz`/`.zip` (tag rilis TETAP SAMA, `autobuild-2026-08-19-19-21`, supaya versi FFmpeg tidak ikut berubah); `cargo tauri build` tetap sukses kedua OS | ☑ |
 | T1.8 (baru) | Sanity-check codec build LGPL | — | `ffmpeg -codecs` dari binary LGPL yang di-download menunjukkan `libmp3lame`, `aac`, `flac` tersedia — tempel output sebagai bukti | ☑ |
 
-## Fase 2+ (belum dimulai)
+## Fase 2+ (SELESAI)
 
 | # | Task | Target file | Done criteria | Status |
 |---|---|---|---|:---:|

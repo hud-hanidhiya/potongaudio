@@ -89,3 +89,35 @@ export gagal — user harus klik Save lagi secara eksplisit.
   hanya untuk path gaya Windows); guardrail "Operasi file destruktif" terpenuhi.
 - Preservasi pitch export butuh `rubberband` (GPL) yang tidak ada di build
   LGPL — checkbox UI dinonaktifkan sampai library time-stretch diputuskan.
+
+## Backlog / DEFERRED (dari code review v1.0, jangan dikerjakan tanpa persetujuan)
+
+Fitur & perbaikan yang ditunda agar fokus pada rilis v0.1.0 bersih:
+- **M4**: Clamp fade-in di `previewEngine.ts` (fade-out sudah di-clamp; fade-in
+  yang lebih panjang dari durasi region bisa menyebabkan urutan automation
+  gain ambigu antar-browser).
+- **M5**: Satukan `AudioContext` — `WaveformView.handlePlayToggle` masih
+  membuat context baru, seharusnya pakai shared context di `audioDecode.ts` +
+  `void ctx.resume()` sebelum play (autoplay policy webview).
+- **M6**: Preview speed = no-op diam; tambah hint "preview speed belum
+  tersedia" + hapus dead code `subscribeExportEvents` di `ipc.ts`
+  (tidak di-import siapa pun).
+- **M8**: Lifecycle job `export_audio` — unregister saat channel tertutup
+  tanpa `Terminated` (`rx.recv()→None` bocor registry) + timeout untuk
+  FFmpeg yang hang (user hanya bisa Cancel manual).
+- **H4 langkah 2**: Perketat scope `fs:read-file` — ganti `allow: ["**"]`
+  ke pattern per-file yang dipilih user (capability dinamis) atau route
+  pembacaan bytes lewat command Rust khusus.
+- **L1**: Decode file dua kali (Web Audio + WaveSurfer internal). Optimasi
+  v1.1: kirim `peaks` hasil compute dari `AudioBuffer`.
+- **L2**: `height: 96` WaveSurfer vs container `h-32` (128px) — waveform
+  tidak mengisi box.
+- **L3**: `Dropzone.tsx` file-drop tidak memvalidasi ekstensi.
+- **L4**: `ExportDock.handleSave` tanpa try/catch.
+- **L7**: Scope fs duplikat (`tauri.conf.json plugins.fs.scope` + capability
+  `fs:read-file.allow`) — pilih satu sumber kebenaran.
+- **L8**: Kontrak dobel pada sukses export — `emit("export://done")` +
+  return `ExportResult`; frontend hanya pakai return value.
+- **Prettier** (bukan eslint — formatting terpisah).
+- **Batas ukuran/durasi file v1** — belum diputuskan.
+- **Library time-stretch akhir** untuk preview speed & preserve-pitch export.
