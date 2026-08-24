@@ -35,15 +35,18 @@ export interface DecodedAudio {
  * Web Audio API. Bytes yang sama dipakai ulang oleh WaveSurfer (blob URL)
  * supaya file tidak dibaca dua kali dari disk.
  */
-export async function decodeAudioFromPath(filePath: string): Promise<DecodedAudio> {
+export async function readAudioBytes(filePath: string): Promise<Uint8Array> {
   const { readFile } = await import('@tauri-apps/plugin-fs');
-  const bytes = await readFile(filePath);
-  return decodeAudioFromBytes(new Uint8Array(bytes).buffer);
+  return new Uint8Array(await readFile(filePath));
 }
 
-export async function decodeAudioFromBytes(bytes: ArrayBuffer): Promise<DecodedAudio> {
+export async function decodeAudioFromPath(filePath: string): Promise<DecodedAudio> {
+  return decodeAudioFromBytes((await readAudioBytes(filePath)).buffer);
+}
+
+export async function decodeAudioFromBytes(bytes: ArrayBufferLike): Promise<DecodedAudio> {
   const ctx = getAudioContext();
-  const audioBuffer = await ctx.decodeAudioData(bytes);
+  const audioBuffer = await ctx.decodeAudioData(bytes as ArrayBuffer);
   return {
     audioBuffer,
     durationMs: Math.round(audioBuffer.duration * 1000),
