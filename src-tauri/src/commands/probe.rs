@@ -48,12 +48,11 @@ struct FfprobeStream {
 /// menulis banyak field sebagai STRING (bukan number) dan bisa saja tidak
 /// menyertakan stream audio sama sekali (mis. file rusak atau video-only).
 pub fn parse_ffprobe_json(raw: &str) -> AppResult<ProbeResult> {
-    let parsed: FfprobeOutput = serde_json::from_str(raw).map_err(|e| {
-        AppError::InvalidAudioFile {
+    let parsed: FfprobeOutput =
+        serde_json::from_str(raw).map_err(|e| AppError::InvalidAudioFile {
             path: "<unknown>".into(),
             detail: format!("output ffprobe tidak bisa di-parse: {e}"),
-        }
-    })?;
+        })?;
 
     let duration_secs: f64 = parsed
         .format
@@ -84,7 +83,10 @@ pub fn parse_ffprobe_json(raw: &str) -> AppResult<ProbeResult> {
         duration_ms: (duration_secs * 1000.0).round() as u64,
         sample_rate,
         channels: audio_stream.channels.unwrap_or(2),
-        format_name: parsed.format.format_name.unwrap_or_else(|| "unknown".into()),
+        format_name: parsed
+            .format
+            .format_name
+            .unwrap_or_else(|| "unknown".into()),
     })
 }
 
@@ -102,15 +104,19 @@ pub async fn probe_audio_file_impl(
 ) -> AppResult<ProbeResult> {
     let output = tokio::process::Command::new(ffprobe_binary_path)
         .args([
-            "-v", "quiet",
-            "-print_format", "json",
+            "-v",
+            "quiet",
+            "-print_format",
+            "json",
             "-show_format",
             "-show_streams",
             file_path,
         ])
         .output()
         .await
-        .map_err(|e| AppError::SidecarSpawnFailed { detail: e.to_string() })?;
+        .map_err(|e| AppError::SidecarSpawnFailed {
+            detail: e.to_string(),
+        })?;
 
     if !output.status.success() {
         return Err(AppError::InvalidAudioFile {
@@ -147,17 +153,23 @@ mod tauri_wiring {
         let output = app
             .shell()
             .sidecar("ffprobe")
-            .map_err(|e| AppError::SidecarSpawnFailed { detail: e.to_string() })?
+            .map_err(|e| AppError::SidecarSpawnFailed {
+                detail: e.to_string(),
+            })?
             .args([
-                "-v", "quiet",
-                "-print_format", "json",
+                "-v",
+                "quiet",
+                "-print_format",
+                "json",
                 "-show_format",
                 "-show_streams",
                 &file_path,
             ])
             .output()
             .await
-            .map_err(|e| AppError::SidecarSpawnFailed { detail: e.to_string() })?;
+            .map_err(|e| AppError::SidecarSpawnFailed {
+                detail: e.to_string(),
+            })?;
 
         if !output.status.success() {
             return Err(AppError::InvalidAudioFile {

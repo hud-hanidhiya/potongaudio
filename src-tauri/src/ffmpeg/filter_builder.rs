@@ -3,13 +3,13 @@
 //! CATATAN DESAIN — baca sebelum ubah urutan filter:
 //! Urutan chain filter MEMENGARUHI hasil akhir, bukan sekadar gaya penulisan:
 //!   1. atrim   — potong region dulu, supaya semua filter setelahnya bekerja
-//!                pada rentang yang benar (durasi acuan untuk fade-out dihitung
-//!                dari SINI, bukan dari file asli).
+//!      pada rentang yang benar (durasi acuan untuk fade-out dihitung
+//!      dari SINI, bukan dari file asli).
 //!   2. atempo  — ubah speed SEBELUM fade, karena fade dihitung dalam durasi
-//!                waktu-nyata hasil akhir, bukan waktu asli sebelum speed-up.
+//!      waktu-nyata hasil akhir, bukan waktu asli sebelum speed-up.
 //!   3. afade   — in & out, dihitung dari durasi PASCA-trim-dan-speed.
 //!   4. volume  — gain, paling akhir supaya tidak clipping filter lain
-//!                (fade curve dihitung di atas sinyal yang belum di-gain).
+//!      (fade curve dihitung di atas sinyal yang belum di-gain).
 
 use crate::commands::export::{EffectParams, OutputFormat};
 use crate::error::{AppError, AppResult};
@@ -46,8 +46,7 @@ pub fn build_filter_plan(params: &EffectParams, total_duration_ms: u64) -> AppRe
     if (params.speed.ratio - 1.0).abs() > f32::EPSILON {
         let chain = build_atempo_chain(params.speed.ratio)?;
         filters.extend(chain);
-        duration_after_speed_ms =
-            (trimmed_duration_ms as f32 / params.speed.ratio) as u64;
+        duration_after_speed_ms = (trimmed_duration_ms as f32 / params.speed.ratio) as u64;
     }
 
     // 3. Fade in/out — dihitung dari duration_after_speed_ms, BUKAN trimmed_duration_ms.
@@ -71,9 +70,14 @@ pub fn build_filter_plan(params: &EffectParams, total_duration_ms: u64) -> AppRe
     }
 
     let filter_complex = filters.join(",");
-    let (output_ext, codec_args) = codec_args_for_format(&params.output_format, params.output_bitrate_kbps);
+    let (output_ext, codec_args) =
+        codec_args_for_format(&params.output_format, params.output_bitrate_kbps);
 
-    Ok(FilterPlan { filter_complex, output_ext, codec_args })
+    Ok(FilterPlan {
+        filter_complex,
+        output_ext,
+        codec_args,
+    })
 }
 
 /// atempo FFmpeg hanya valid 0.5x–2.0x. Rasio di luar itu perlu di-chain,
@@ -92,7 +96,7 @@ fn build_atempo_chain(target_ratio: f32) -> AppResult<Vec<String>> {
     // Pecah rasio jadi langkah-langkah dalam rentang valid.
     // Batasi iterasi untuk cegah infinite loop pada input ekstrem/aneh.
     for _ in 0..8 {
-        if remaining >= ATEMPO_MIN && remaining <= ATEMPO_MAX {
+        if (ATEMPO_MIN..=ATEMPO_MAX).contains(&remaining) {
             steps.push(format!("atempo={remaining:.4}"));
             return Ok(steps);
         }
@@ -186,10 +190,19 @@ mod tests {
     fn base_params() -> EffectParams {
         EffectParams {
             source_file_path: "/tmp/in.mp3".into(),
-            region: Region { start_ms: 1000, end_ms: 5000 }, // durasi 4000ms
+            region: Region {
+                start_ms: 1000,
+                end_ms: 5000,
+            }, // durasi 4000ms
             gain_db: 0.0,
-            fade: Fade { in_ms: 0, out_ms: 0 },
-            speed: Speed { ratio: 1.0, preserve_pitch: true },
+            fade: Fade {
+                in_ms: 0,
+                out_ms: 0,
+            },
+            speed: Speed {
+                ratio: 1.0,
+                preserve_pitch: true,
+            },
             output_format: OutputFormat::Mp3,
             output_bitrate_kbps: None,
         }
@@ -203,7 +216,9 @@ mod tests {
     #[test]
     fn trim_selalu_ada_di_chain() {
         let plan = build_filter_plan(&base_params(), DURATION_MS).unwrap();
-        assert!(plan.filter_complex.contains("atrim=start=1000ms:end=5000ms"));
+        assert!(plan
+            .filter_complex
+            .contains("atrim=start=1000ms:end=5000ms"));
     }
 
     #[test]
@@ -226,7 +241,9 @@ mod tests {
         p.fade.out_ms = 500;
         let plan = build_filter_plan(&p, DURATION_MS).unwrap();
         // durasi trim = 4000ms, fade_out 500ms -> start di 3500ms
-        assert!(plan.filter_complex.contains("afade=t=out:st=3500ms:d=500ms"));
+        assert!(plan
+            .filter_complex
+            .contains("afade=t=out:st=3500ms:d=500ms"));
     }
 
     #[test]
@@ -236,7 +253,9 @@ mod tests {
         p.fade.out_ms = 500;
         let plan = build_filter_plan(&p, DURATION_MS).unwrap();
         // durasi setelah speed = 2000ms, fade_out 500ms -> start di 1500ms
-        assert!(plan.filter_complex.contains("afade=t=out:st=1500ms:d=500ms"));
+        assert!(plan
+            .filter_complex
+            .contains("afade=t=out:st=1500ms:d=500ms"));
     }
 
     #[test]
@@ -258,20 +277,29 @@ mod tests {
     fn atempo_di_atas_2x_di_chain_dua_langkah() {
         // 3.0 = 2.0 * 1.5
         let chain = build_atempo_chain(3.0).unwrap();
-        assert_eq!(chain, vec!["atempo=2".to_string(), "atempo=1.5000".to_string()]);
+        assert_eq!(
+            chain,
+            vec!["atempo=2".to_string(), "atempo=1.5000".to_string()]
+        );
     }
 
     #[test]
     fn atempo_di_bawah_half_di_chain() {
         // 0.25 = 0.5 * 0.5
         let chain = build_atempo_chain(0.25).unwrap();
-        assert_eq!(chain, vec!["atempo=0.5".to_string(), "atempo=0.5000".to_string()]);
+        assert_eq!(
+            chain,
+            vec!["atempo=0.5".to_string(), "atempo=0.5000".to_string()]
+        );
     }
 
     #[test]
     fn region_end_kurang_dari_start_ditolak() {
         let mut p = base_params();
-        p.region = Region { start_ms: 5000, end_ms: 1000 };
+        p.region = Region {
+            start_ms: 5000,
+            end_ms: 1000,
+        };
         let result = build_filter_plan(&p, DURATION_MS);
         assert!(result.is_err());
     }
@@ -315,7 +343,10 @@ mod tests {
     #[test]
     fn region_end_melebihi_durasi_file_ditolak() {
         let mut p = base_params();
-        p.region = Region { start_ms: 1000, end_ms: 20_000 }; // > DURATION_MS (10_000)
+        p.region = Region {
+            start_ms: 1000,
+            end_ms: 20_000,
+        }; // > DURATION_MS (10_000)
         let result = build_filter_plan(&p, DURATION_MS);
         assert!(result.is_err());
         let err = result.err().unwrap().to_string();
@@ -326,7 +357,10 @@ mod tests {
     fn region_end_sama_dengan_durasi_file_lolos() {
         // Pembanding `>` ketat: end == durasi sah.
         let mut p = base_params();
-        p.region = Region { start_ms: 1000, end_ms: 10_000 };
+        p.region = Region {
+            start_ms: 1000,
+            end_ms: 10_000,
+        };
         let plan = build_filter_plan(&p, DURATION_MS).unwrap();
         assert!(plan.filter_complex.contains("end=10000ms"));
     }
@@ -337,7 +371,10 @@ mod tests {
         // apapun dengan end_ms >= 1 otomatis > durasi → ditolak oleh cek
         // `end_ms > total_duration_ms` (region 0..0 sudah ditolak cek end>start).
         let mut p = base_params();
-        p.region = Region { start_ms: 0, end_ms: 1 };
+        p.region = Region {
+            start_ms: 0,
+            end_ms: 1,
+        };
         let result = build_filter_plan(&p, 0);
         assert!(result.is_err());
     }

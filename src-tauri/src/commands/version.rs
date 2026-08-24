@@ -14,11 +14,15 @@ mod tauri_wiring {
         let output = app
             .shell()
             .sidecar("ffmpeg")
-            .map_err(|e| AppError::SidecarSpawnFailed { detail: e.to_string() })?
+            .map_err(|e| AppError::SidecarSpawnFailed {
+                detail: e.to_string(),
+            })?
             .args(["-version"])
             .output()
             .await
-            .map_err(|e| AppError::SidecarSpawnFailed { detail: e.to_string() })?;
+            .map_err(|e| AppError::SidecarSpawnFailed {
+                detail: e.to_string(),
+            })?;
 
         if !output.status.success() {
             return Err(AppError::FfmpegExecutionFailed {

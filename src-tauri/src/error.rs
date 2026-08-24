@@ -20,7 +20,10 @@ pub enum AppError {
     SidecarSpawnFailed { detail: String },
 
     /// FFmpeg berjalan tapi exit dengan kode non-zero.
-    FfmpegExecutionFailed { exit_code: Option<i32>, stderr_tail: String },
+    FfmpegExecutionFailed {
+        exit_code: Option<i32>,
+        stderr_tail: String,
+    },
 
     /// Parameter dari frontend tidak valid (mis. region end < start).
     InvalidParams { detail: String },
@@ -47,7 +50,10 @@ impl fmt::Display for AppError {
             AppError::SidecarSpawnFailed { detail } => {
                 write!(f, "Gagal menjalankan proses audio: {detail}")
             }
-            AppError::FfmpegExecutionFailed { exit_code, stderr_tail } => {
+            AppError::FfmpegExecutionFailed {
+                exit_code,
+                stderr_tail,
+            } => {
                 write!(
                     f,
                     "Proses audio gagal (exit code {:?}): {}",
@@ -118,7 +124,10 @@ impl From<&AppError> for SerializableError {
             AppError::Cancelled { .. } => "cancelled",
             AppError::Io(_) => "io_error",
         };
-        SerializableError { kind, message: e.to_string() }
+        SerializableError {
+            kind,
+            message: e.to_string(),
+        }
     }
 }
 
@@ -130,7 +139,9 @@ mod tests {
 
     #[test]
     fn error_message_bahasa_indonesia_dan_tidak_kosong() {
-        let e = AppError::FileNotFound { path: "test.mp3".into() };
+        let e = AppError::FileNotFound {
+            path: "test.mp3".into(),
+        };
         assert!(e.to_string().contains("test.mp3"));
     }
 
@@ -146,7 +157,9 @@ mod tests {
 
     #[test]
     fn serializable_error_kind_konsisten() {
-        let e = AppError::InvalidParams { detail: "region end < start".into() };
+        let e = AppError::InvalidParams {
+            detail: "region end < start".into(),
+        };
         let ser: SerializableError = (&e).into();
         assert_eq!(ser.kind, "invalid_params");
     }

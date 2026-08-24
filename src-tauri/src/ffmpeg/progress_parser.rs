@@ -99,10 +99,7 @@ fn split_key_value(line: &str) -> Option<(&str, &str)> {
 /// kalau suatu saat dibutuhkan).
 #[allow(dead_code)]
 pub fn parse_full_output(output: &str, _total_duration_ms: u64) -> HashMap<&str, &str> {
-    output
-        .lines()
-        .filter_map(split_key_value)
-        .collect()
+    output.lines().filter_map(split_key_value).collect()
 }
 
 #[cfg(test)]
@@ -112,7 +109,7 @@ mod tests {
     #[test]
     fn out_time_us_dihitung_sebagai_persen_dengan_benar() {
         let mut tracker = ProgressTracker::new(10_000); // total 10 detik
-        // 5_000_000 mikrodetik = 5000ms = 50% dari 10000ms
+                                                        // 5_000_000 mikrodetik = 5000ms = 50% dari 10000ms
         let update = tracker.process_line("out_time_us=5000000");
         assert_eq!(update, ProgressUpdate::Percent(50));
     }
@@ -179,8 +176,14 @@ mod tests {
     fn baris_kosong_atau_malformed_tidak_panic() {
         let mut tracker = ProgressTracker::new(10_000);
         assert_eq!(tracker.process_line(""), ProgressUpdate::NoUpdate);
-        assert_eq!(tracker.process_line("bukan_key_value_valid"), ProgressUpdate::NoUpdate);
-        assert_eq!(tracker.process_line("out_time_us=bukan_angka"), ProgressUpdate::NoUpdate);
+        assert_eq!(
+            tracker.process_line("bukan_key_value_valid"),
+            ProgressUpdate::NoUpdate
+        );
+        assert_eq!(
+            tracker.process_line("out_time_us=bukan_angka"),
+            ProgressUpdate::NoUpdate
+        );
     }
 
     #[test]

@@ -78,10 +78,10 @@ mod tauri_wiring {
     use crate::ffmpeg::progress_parser::{ProgressTracker, ProgressUpdate};
     use crate::ffmpeg::sidecar::JobRegistry;
     use std::sync::Arc;
-    use tokio::sync::Mutex;
     use tauri::{AppHandle, Emitter, State};
     use tauri_plugin_shell::process::CommandEvent;
     use tauri_plugin_shell::ShellExt;
+    use tokio::sync::Mutex;
 
     #[derive(serde::Serialize)]
     pub struct ExportResult {
@@ -143,10 +143,14 @@ mod tauri_wiring {
         let (mut rx, child) = app
             .shell()
             .sidecar("ffmpeg")
-            .map_err(|e| AppError::SidecarSpawnFailed { detail: e.to_string() })?
+            .map_err(|e| AppError::SidecarSpawnFailed {
+                detail: e.to_string(),
+            })?
             .args(&args)
             .spawn()
-            .map_err(|e| AppError::SidecarSpawnFailed { detail: e.to_string() })?;
+            .map_err(|e| AppError::SidecarSpawnFailed {
+                detail: e.to_string(),
+            })?;
 
         // Daftarkan child ke JobRegistry (dukung cancel lewat `Killable`,
         // berlaku untuk `tauri_plugin_shell::process::CommandChild` di runtime
@@ -170,7 +174,10 @@ mod tauri_wiring {
                     if let ProgressUpdate::Percent(p) = tracker.process_line(&line) {
                         let _ = app.emit(
                             "export://progress",
-                            ProgressPayload { job_id: job_id.clone(), percent: p },
+                            ProgressPayload {
+                                job_id: job_id.clone(),
+                                percent: p,
+                            },
                         );
                     }
                 }
@@ -184,7 +191,10 @@ mod tauri_wiring {
                         };
                         let _ = app.emit(
                             "export://error",
-                            ErrorPayload { job_id: job_id.clone(), message: err.to_string() },
+                            ErrorPayload {
+                                job_id: job_id.clone(),
+                                message: err.to_string(),
+                            },
                         );
                         return Err(err);
                     }
@@ -195,7 +205,10 @@ mod tauri_wiring {
                     let err = AppError::SidecarSpawnFailed { detail: e };
                     let _ = app.emit(
                         "export://error",
-                        ErrorPayload { job_id: job_id.clone(), message: err.to_string() },
+                        ErrorPayload {
+                            job_id: job_id.clone(),
+                            message: err.to_string(),
+                        },
                     );
                     return Err(err);
                 }
@@ -210,13 +223,24 @@ mod tauri_wiring {
             };
             let _ = app.emit(
                 "export://error",
-                ErrorPayload { job_id: job_id.clone(), message: err.to_string() },
+                ErrorPayload {
+                    job_id: job_id.clone(),
+                    message: err.to_string(),
+                },
             );
             return Err(err);
         }
 
-        let result = ExportResult { output_path: output_path.clone() };
-        let _ = app.emit("export://done", DonePayload { job_id: job_id.clone(), output_path });
+        let result = ExportResult {
+            output_path: output_path.clone(),
+        };
+        let _ = app.emit(
+            "export://done",
+            DonePayload {
+                job_id: job_id.clone(),
+                output_path,
+            },
+        );
 
         Ok(result)
     }

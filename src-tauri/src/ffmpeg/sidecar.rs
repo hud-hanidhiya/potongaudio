@@ -10,6 +10,7 @@
 
 use crate::error::{AppError, AppResult};
 use crate::ffmpeg::progress_parser::{ProgressTracker, ProgressUpdate};
+use async_trait::async_trait;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::process::Stdio;
@@ -17,7 +18,6 @@ use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::{Child, Command};
 use tokio::sync::Mutex;
-use async_trait::async_trait;
 
 /// Trait untuk mengabstraksi kemampuan `kill()` dari berbagai tipe proses.
 /// Ini memungkinkan `JobRegistry` menyimpan `tokio::process::Child` (untuk test)
@@ -122,7 +122,9 @@ where
         .stdout(Stdio::null())
         .stderr(Stdio::piped())
         .spawn()
-        .map_err(|e| AppError::SidecarSpawnFailed { detail: e.to_string() })?;
+        .map_err(|e| AppError::SidecarSpawnFailed {
+            detail: e.to_string(),
+        })?;
 
     let stderr = child
         .stderr
@@ -303,7 +305,10 @@ mod tests {
 
         assert!(result.is_err());
         match result {
-            Err(AppError::FfmpegExecutionFailed { exit_code, stderr_tail }) => {
+            Err(AppError::FfmpegExecutionFailed {
+                exit_code,
+                stderr_tail,
+            }) => {
                 assert_eq!(exit_code, Some(1));
                 assert!(stderr_tail.contains("Invalid data"));
             }
@@ -373,13 +378,15 @@ mod tests {
         registry.register(job_id, killable).await;
 
         let cancelled = registry.cancel(job_id).await;
-        assert!(cancelled, "cancel terhadap job yang sedang berjalan harus berhasil");
+        assert!(
+            cancelled,
+            "cancel terhadap job yang sedang berjalan harus berhasil"
+        );
 
         // Verifikasi proses BENAR-BENAR di-terminate: tunggu reaping dgn timeout.
-        let reaped = tokio::time::timeout(
-            std::time::Duration::from_secs(10),
-            async { child_handle.lock().await.wait().await },
-        )
+        let reaped = tokio::time::timeout(std::time::Duration::from_secs(10), async {
+            child_handle.lock().await.wait().await
+        })
         .await;
         assert!(
             reaped.is_ok(),
