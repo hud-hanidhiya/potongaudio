@@ -349,6 +349,11 @@ jobs:
       contents: write
       actions: read
     steps:
+      # `gh release create` membaca konteks repo dari working directory
+      # (.git) — tanpa checkout, job ini gagal "not a git repository".
+      - name: Checkout repo (konteks utk gh)
+        uses: actions/checkout@v5
+
       - name: Download build artifacts
         uses: actions/download-artifact@v5
         with:
