@@ -1,7 +1,7 @@
-# Retrospective — Potong Audio (Fase 0)
+# Retrospective — Potong Audio (Fase 0–5, MVP v1.0)
 
-> Retro ini mencakup periode dari rancangan awal sampai Fase 0 ditutup
-> (2026-08-21). Update lagi setelah Fase 1 selesai / project di-ship /
+> Retro ini mencakup dari rancangan awal sampai MVP v1.0 (Fase 0–5) ditutup
+> (2026-08-24). Update lagi setelah Fase berikutnya / project di-ship lanjut /
 > project di-abandon.
 
 ## Apa yang berjalan efektif
@@ -48,12 +48,46 @@
   sebagai retrofit, membantu menyatukan histori keputusan yang sebelumnya
   tersebar di banyak dokumen ad-hoc.
 
+## Fase 1–5 — MVP v1.0 (2026-08-24)
+
+Periode ini membawa project dari skeleton Fase 0 ke aplikasi utuh yang bisa
+di-rilis: UI (WaveSurfer + region trim), wiring export backend↔frontend,
+dan pipeline rilis otomatis.
+
+### Yang berjalan efektif
+- **Satu sumber kebenaran `EffectParams`** (Zustand `useAudioStore`) dipakai
+  baik oleh preview (Web Audio API) maupun payload export ke Rust — kontrak
+  TS↔Rust disinkronkan via `serde(rename_all = "camelCase")`, tanpa mapping
+  manual.
+- **WaveSurfer.js + RegionsPlugin** untuk region trim: drag handle dua-arah
+  sinkron dengan `TimeInput` (guard toleransi 5ms cegah loop event). File audio
+  dibaca SEKALI (`plugin-fs` `readFile`) lalu dipakai untuk waveform (blob URL)
+  dan decode preview.
+- **Swap FFmpeg GPL→LGPL** (build BtbN, tag sama) tanpa mengubah urutan filter
+  maupun kontrak apa pun — hanya suffix asset build. Sanity-check codec
+  (`libmp3lame`/`aac`/`flac`) jadi gate wajib sebelum binary dianggap layak.
+- **AC-04 ditolak eksplisit** di frontend (`useExportStore.startExport`) sebelum
+  IPC — source tidak pernah ke-overwrite diam-diam.
+- **Pipeline rilis additive** di `build-verify.yml`: tag `v*` → job
+  `publish-release` mempublikasikan GitHub Release dari artifact yang sudah
+  di-build (tanpa mengubah job verifikasi yang sudah hijau).
+
+### Keputusan / catatan
+- **Speed/pitch**: `atempo` di export tetap mengubah pitch; preservasi pitch
+  butuh `rubberband` (GPL, tidak ada di build LGPL) — sengaja ditunda, bukan
+  bug. Preview speed juga belum ada (butuh library time-stretch).
+- **Installer rilis unsigned** (T0.7 code signing ditunda) — di Windows muncul
+  peringatan SmartScreen.
+- **Anomali ukuran AppImage** (177MB vs NSIS 80MB) belum diinvestigasi.
+
 ## Backlog / ide v2
 - Multi-region trim, undo/redo, equalizer (resmi di-scope ke v2).
 - Support macOS.
 - Investigasi anomali ukuran AppImage (177MB vs 80MB NSIS).
-- Perbandingan FFmpeg build full vs minimal (T0.6).
+- Perbandingan FFmpeg build full vs minimal (T0.6) — sudah diputuskan pakai
+  LGPL off-the-shelf, selisih riil ~13% (bukan ~50% seperti proyeksi lama).
 - Code signing Windows/macOS (T0.7 / rilis).
 - Cleanup otomatis file output parsial saat cancel/error (ditemukan saat
   menulis Failure Mode di `04-architecture-notes.md` — belum ada di task
   plan sebelumnya).
+- Preservasi pitch export + preview speed (time-stretch library).

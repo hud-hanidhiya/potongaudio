@@ -7,28 +7,41 @@ trim, efek audio (fade, gain, speed), dan konversi format audio.
 
 ## Status Proyek
 
-**Fase 0 (PoC & Validasi Teknis) — SELESAI.** Semua PoC kritis sudah
-diverifikasi di Windows x86_64: sidecar FFmpeg/FFprobe berjalan, trim
-end-to-end menghasilkan file valid, progress streaming live, installer
-NSIS ter-build. Hasil lengkap ada di [`POC_FINDINGS.md`](./POC_FINDINGS.md).
+**MVP v1.0 — SELESAI (Fase 0–3 + pipeline rilis).** Seluruh fitur inti
+sudah terimplementasi dan terverifikasi:
 
 - `cargo test` — 39 unit test lulus (tanpa perlu binary FFmpeg asli)
 - `cargo build --features tauri-runtime` — lulus
-- `cargo tauri build` — lulus, installer NSIS `PotongAudio_0.1.0_x64-setup.exe` (80 MB)
-- `npm run build` — lulus (tsc + vite)
+- `cargo tauri build` — lulus, installer NSIS (Windows) + AppImage & `.deb` (Linux)
+- `npm run build` — lulus (tsc strict + vite)
+- CI `build-verify.yml` hijau di Windows & Linux; push tag `v*` otomatis
+  mempublikasikan GitHub Release (T5.1)
 
-## Fitur (kondisi sekarang)
+Hasil PoC lengkap ada di [`POC_FINDINGS.md`](./POC_FINDINGS.md).
+
+## Fitur
 
 - **Probe audio** — metadata file (durasi, sample rate, channel, format) via FFprobe sidecar
+- **Waveform interaktif** — render via WaveSurfer.js; region trim bisa di-drag
+  langsung di waveform, dua-arah tersinkron dengan input waktu (MM:SS.ms)
 - **Trim** — potong region dengan akurasi milidetik (`atrim`, teruji end-to-end)
-- **Efek** — fade in/out, gain, speed/pitch (`filter_builder` siap; UI sudah ada di `Toolbar.tsx`)
+- **Efek** — fade in/out, gain (−20 s/d +20 dB), speed (filter `atempo` dengan
+  chaining otomatis di luar rentang 0.5–2.0×)
+  - *Catatan:* di build FFmpeg **LGPL** (default v1) efek speed tetap mengubah
+    pitch — preservasi pitch butuh `rubberband` (GPL), belum dibundel. Preview
+    speed juga belum ada (lihat Roadmap).
+- **Preview** — putar region via Web Audio API dengan gain & fade diterapkan
+  secara real-time sebelum export
 - **Cancel** — batalkan export yang sedang berjalan via `JobRegistry`
 - **Progress streaming** — event `export://progress` / `export://done` / `export://error`
-- **100% Offline** — semua processing lokal, tidak ada upload ke server
+- **Save dialog native** — pilih lokasi output via Tauri dialog
+- **AC-04** — export ditolak kalau path output sama dengan file sumber
+  (tidak overwrite source diam-diam)
+- **100% Offline** — semua processing lulus di mesin lokal, tanpa server
 
-Keputusan scope Fase 0: **multi-region trim, undo/redo, dan equalizer ditunda
-ke v2**. Target Fase 0 hanya Windows x86_64 + Linux x86_64 (macOS di luar
-scope). Code signing Windows ditunda ke Fase 5.
+Keputusan scope: **multi-region trim, undo/redo, equalizer, dan macOS ditunda
+ke v2**. Code signing ditunda (installer rilis **unsigned** — di Windows muncul
+peringatan SmartScreen).
 
 ## Tech Stack
 
@@ -37,37 +50,35 @@ scope). Code signing Windows ditunda ke Fase 5.
 - **Vite** — build tool
 - **Zustand** — state management
 - **Tailwind CSS** — styling
+- **WaveSurfer.js** — waveform interaktif + region plugin (via `wavesurfer.js/plugins/regions`)
 
 ### Backend
 - **Rust** — core processing
-- **Tauri v2** — desktop framework
-- **FFmpeg** — audio encoding/decoding (sidecar binary, BtbN gpl build)
-- **FFprobe** — audio metadata probing (sidecar binary)
+- **Tauri v2** — desktop framework (dependency `optional` via feature `tauri-runtime`)
+- **FFmpeg** — audio encoding/decoding (sidecar binary, **BtbN LGPL build**)
+- **FFprobe** — audio metadata probing (sidecar binary, BtbN LGPL build)
 - **Tokio** — async runtime
+- **@tauri-apps/plugin-fs** — baca bytes file lokal untuk decode waveform/preview
+- **@tauri-apps/plugin-dialog** — save/open dialog native
 
 ## Prerequisites
 
 - Node.js 18+ dan npm
-- Rust (toolchain stable MSVC) + build tools (lihat build host Windows)
-- FFmpeg/FFprobe binary di `src-tauri/binaries/` (sudah disediakan untuk
-  `x86_64-pc-windows-msvc`; untuk Linux perlu download build `linux64-gpl`
-  dengan nama `ffmpeg-x86_64-unknown-linux-gnu` / `ffprobe-x86_64-unknown-linux-gnu`)
+- Rust (toolchain stable) + build tools sistem (WebKitGTK 4.1 di Linux, MSVC di Windows)
+- FFmpeg/FFprobe binary di `src-tauri/binaries/` (target-triple naming):
+  - Windows: `ffmpeg-x86_64-pc-windows-msvc.exe` / `ffprobe-x86_64-pc-windows-msvc.exe`
+  - Linux: `ffmpeg-x86_64-unknown-linux-gnu` / `ffprobe-x86_64-unknown-linux-gnu`
 - Setup pertama klon baru: jalankan `npm run setup:ffmpeg` untuk otomatis
-  mendownload & memverifikasi FFmpeg/FFprobe build BtbN (gpl) yang sama
-  dipakai di CI. Script tersedia untuk Linux/macOS (`.sh`) dan Windows (`.ps1`).
+  mendownload & memverifikasi checksum FFmpeg/FFprobe **build LGPL** BtbN
+  (tag `autobuild-2026-08-19-19-21`) — versi dipin identik di Windows & Linux.
 
 ## Development
 
 ```bash
-# Install dependencies frontend
-npm install
-
-# Test backend (cepat, tanpa dependency Tauri)
-cd src-tauri
-cargo test
-
-# Build aplikasi Tauri (feature tauri-runtime aktif otomatis via tauri.conf.json)
-cargo tauri dev
+npm install                       # dependencies frontend
+cd src-tauri && cargo test        # 39 unit test (cepat, tanpa Tauri)
+npm run setup:ffmpeg            # download & verifikasi binary FFmpeg/FFprobe LGPL
+cargo tauri dev                  # jalankan app (feature tauri-runtime aktif otomatis)
 ```
 
 ## Build Production
@@ -75,12 +86,19 @@ cargo tauri dev
 ```bash
 npm run build                    # frontend -> dist/
 cd src-tauri
-cargo tauri build                # menghasilkan installer (NSIS di Windows, AppImage di Linux)
+cargo tauri build                # installer: NSIS (Windows), AppImage + .deb (Linux)
 ```
 
 Output di `src-tauri/target/release/bundle/`:
 - Windows: `nsis/PotongAudio_0.1.0_x64-setup.exe`
-- Linux: `appimage/` (butuh host Linux)
+- Linux: `appimage/` dan `deb/`
+
+### Rilis otomatis (GitHub Release)
+
+Push tag `v*` (mis. `git tag v0.1.0 && git push origin v0.1.0`) memicu
+`build-verify.yml` membangun kedua OS lalu job `publish-release` mempublikasikan
+GitHub Release berisi installer NSIS, AppImage, dan `.deb`. Installer rilis
+**unsigned** (T0.7 code signing ditunda).
 
 ## Struktur Project
 
@@ -89,11 +107,10 @@ potongaudio/
 ├── package.json                 # config frontend di root (bukan di src/)
 ├── vite.config.ts
 ├── tsconfig.json
-├── tsconfig.node.json
 ├── src/                         # Frontend React/TypeScript
 │   ├── components/
 │   │   ├── upload/Dropzone.tsx
-│   │   └── workspace/{Toolbar,WaveformView,TimeInput,ExportDock,StatusBadge}.tsx
+│   │   └── workspace/{Toolbar,WaveformView,TimeInput,ExportDock}.tsx
 │   ├── lib/                     # ipc.ts, audioDecode, previewEngine, soundtouch
 │   ├── store/                   # useAudioStore, useExportStore
 │   ├── types/audio.types.ts     # kontrak data frontend <-> backend
@@ -105,15 +122,14 @@ potongaudio/
 │   ├── tauri.conf.json
 │   ├── capabilities/default.json
 │   ├── binaries/                # ffmpeg/ffprobe sidecar (target-triple naming)
-│   ├── icons/
-│   ├── test-fixtures/           # fake_ffmpeg.{sh,bat}, sample/
 │   └── src/
-│       ├── main.rs              # memanggil potong_audio_lib::run()
+│       ├── main.rs
 │       ├── lib.rs
 │       ├── error.rs
 │       ├── commands/            # export.rs, probe.rs, version.rs
 │       └── ffmpeg/              # filter_builder.rs, progress_parser.rs, sidecar.rs
-├── docs/                        # dokumentasi perencanaan
+├── scripts/                     # setup-ffmpeg.sh / .ps1 + run-setup-ffmpeg.mjs
+├── docs/                        # dokumentasi perencanaan (workflow kit 2-tier)
 ├── landing/                     # landing page (static HTML)
 ├── POC_FINDINGS.md              # hasil & keputusan PoC Fase 0
 └── README.md
@@ -122,38 +138,35 @@ potongaudio/
 ## Dokumentasi
 
 - [`POC_FINDINGS.md`](./POC_FINDINGS.md) — hasil PoC Fase 0 dan keputusan teknis
-- [`docs/PLAN_AUDIO_CUTTER.md`](./docs/PLAN_AUDIO_CUTTER.md) — arsitektur, tech stack, roadmap fase
-- [`docs/TECH_IMPLEMENTATION_PLAN.md`](./docs/TECH_IMPLEMENTATION_PLAN.md) — struktur detail, kontrak data/IPC, task breakdown per fase
+- [`docs/00-guardrails.md`](./docs/00-guardrails.md) — risk trigger & aturan wajib
+- [`docs/03-spec.md`](./docs/03-spec.md) — spec fitur & acceptance criteria
+- [`docs/04-architecture-notes.md`](./docs/04-architecture-notes.md) — arsitektur & keputusan
+- [`docs/06-task-plan.md`](./docs/06-task-plan.md) — task plan (status tiap fase)
+- [`docs/08-qa-release-checklist.md`](./docs/08-qa-release-checklist.md) — QA pra-rilis
 
 ## Roadmap
 
-### v1.0 (MVP) — setelah Fase 0
-- [x] Sidecar FFmpeg/FFprobe (PoC Fase 0)
-- [x] Trim end-to-end + progress streaming (PoC Fase 0)
-- [ ] UI trim & waveform interaktif (WaveSurfer.js)
-- [ ] Fade in/out, gain, speed/pitch dari UI
-- [ ] Save dialog native & export MP3/WAV/M4A/FLAC/M4R
+### v1.0 (MVP) — SELESAI
+- [x] Sidecar FFmpeg/FFprobe (build **LGPL**)
+- [x] Trim end-to-end + progress streaming + cancel
+- [x] Waveform interaktif + region trim drag (WaveSurfer.js)
+- [x] Fade in/out, gain, speed dari UI
+- [x] Preview real-time (gain/fade)
+- [x] Save dialog native & export MP3/WAV/M4A/FLAC/M4R
+- [x] AC-04: tolak output == input
+- [x] Pipeline rilis (tag `v*` → GitHub Release)
 
-### v1.1
+### v1.1 / v2 (ditunda)
 - [ ] Multi-region trim
 - [ ] Undo/redo
-- [ ] Equalizer 
-- [ ] Batch processing
-- [ ] Keyboard shortcuts
-
-## Testing
-
-### Frontend
-```bash
-npm run build       # tsc --noEmit + vite build
-```
-
-### Backend (Rust)
-```bash
-cd src-tauri
-cargo test          # 39 unit test
-```
+- [ ] Equalizer
+- [ ] Preservasi pitch di export (butuh `rubberband`/time-stretch — di luar build LGPL)
+- [ ] Preview speed (time-stretch) — pilih library
+- [ ] Code signing Windows (T0.7)
+- [ ] Support macOS
 
 ## Lisensi
 
-Distributed under the **GPL-3.0** License. Lihat file lisensi untuk detail.
+Aplikasi didistribusikan di bawah lisensi **GPL-3.0** (lihat `LICENSE`).
+Binary FFmpeg/FFprobe yang di-bundel adalah **build LGPL** BtbN — kompatibel
+untuk dibundel dalam distribusi GPL-3.0.

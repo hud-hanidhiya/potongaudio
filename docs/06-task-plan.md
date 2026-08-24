@@ -43,7 +43,7 @@
 | T4.1 | Integrasi penuh frontend↔backend (status idle→running→done/error/cancelled) | `ExportDock.tsx`, `useExportStore.ts`, `ipc.ts` | Alur export end-to-end konsisten & ter-compile; `EffectParams` TS↔Rust cocok (camelCase) | ☑ |
 | T4.2 | AC-04: tolak output path == input (jangan overwrite source) | `src/store/useExportStore.ts`, `src/store/useExportStore.test.ts` | `startExport` menolak kalau outputPath == sourceFilePath (case-insensitive) + pesan error ID; `npm test` 3/3 lulus | ☑ |
 | T5.1 | Release workflow (tag → build 2 OS → GitHub Release) | `.github/workflows/build-verify.yml` | Push tag `v*` → job `publish-release` hijau & GitHub Release terbit dengan asset NSIS/AppImage/.deb | ☐ |
-| T5.2 | Pra-rilis: README + retrospective + QA checklist | `README.md`, `docs/09-retrospective.md`, `docs/08-qa-release-checklist.md` | Semua item checklist ☑ & README cocok fitur rilis (human gate sebelum ngetag) | ☐ |
+| T5.2 | Pra-rilis: README + retrospective + QA checklist | `README.md`, `docs/09-retrospective.md`, `docs/08-qa-release-checklist.md` | README & retrospective mencerminkan fitur rilis (done); `08-qa-release-checklist.md` adalah human gate sebelum ngetag | ☑ |
 | T6.x | Code signing/notarization (ditunda) | — | — | ☐ ditunda ke rilis nanti |
 
 ## Backlog v2 (jangan dikerjakan sekarang)
