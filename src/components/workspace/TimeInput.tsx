@@ -3,7 +3,7 @@
  * (drag handle mengubah nilai di sini, mengetik di sini mengubah region).
  */
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 interface TimeInputProps {
   valueMs: number;
@@ -42,13 +42,15 @@ function parseDisplay(input: string): number | null {
 export function TimeInput({ valueMs, onChange, label, disabled }: TimeInputProps) {
   const [text, setText] = useState(() => msToDisplay(valueMs));
   const [isInvalid, setIsInvalid] = useState(false);
-
   // Sinkron ulang tampilan kalau value berubah dari luar (mis. drag handle
   // waveform), TAPI jangan timpa apa yang sedang diketik user.
-  useEffect(() => {
+  // Pola "adjust state during render" (resmi React) — bukan setState di effect.
+  const [prevValueMs, setPrevValueMs] = useState(valueMs);
+  if (valueMs !== prevValueMs) {
+    setPrevValueMs(valueMs);
     setText(msToDisplay(valueMs));
     setIsInvalid(false);
-  }, [valueMs]);
+  }
 
   const handleBlur = () => {
     const parsed = parseDisplay(text);

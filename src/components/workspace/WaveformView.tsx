@@ -39,16 +39,60 @@ export function WaveformView() {
   const [loadError, setLoadError] = useState(false);
   const previewHandleRef = useRef<PreviewHandle | null>(null);
 
-  // --- Load audio (sekali) + init WaveSurfer ---
-  useEffect(() => {
-    if (!loadedFile) return;
-
-    // Reset state sebelumnya (H2): error file lama jangan menempel ke file
-    // baru, buffer lama jangan bisa diputar saat decode baru berjalan, dan
-    // label tombol kembali ke "Play".
+  // H2: reset state saat ganti file — dilakukan saat render (pola resmi React
+  // "adjust state during render"), bukan setState di dalam effect. Error file
+  // lama jangan menempel ke file baru, buffer lama jangan bisa diputar saat
+  // decode baru berjalan, dan label tombol kembali ke "Play".
+  const [prevFilePath, setPrevFilePath] = useState<string | null>(
+    loadedFile?.path ?? null
+  );
+  if ((loadedFile?.path ?? null) !== prevFilePath) {
+    setPrevFilePath(loadedFile?.path ?? null);
     setLoadError(false);
     setDecoded(null);
     setIsPlaying(false);
+  }
+
+  /**
+   * Sinkronkan region store → WaveSurfer (dipakai saat `ready` awal dan saat
+   * region berubah dari TimeInput). Selalu baca region via getState(), bukan
+   * closure render (M1).
+   */
+  function syncRegionToWaveSurfer(durationMs: number) {
+    const regions = regionPluginRef.current;
+    const region = useAudioStore.getState().effectParams?.region;
+    if (!regions || !region) return;
+
+    const start = Math.max(0, region.startMs) / 1000;
+    const end = Math.min(durationMs, region.endMs) / 1000;
+    if (end <= start) return;
+
+    const existing = regions
+      .getRegions()
+      .find((r) => r.id === REGION_ID);
+
+    if (existing) {
+      const curStart = Math.round(existing.start * 1000);
+      const curEnd = Math.round(existing.end * 1000);
+      if (Math.abs(curStart - region.startMs) <= EPS_MS &&
+          Math.abs(curEnd - region.endMs) <= EPS_MS) {
+        return; // sudah sinkron, hindari loop
+      }
+      existing.setOptions({ start, end });
+    } else {
+      regions.addRegion({
+        id: REGION_ID,
+        start,
+        end,
+        content: 'Trim',
+        color: 'rgba(16, 185, 129, 0.18)',
+      });
+    }
+  }
+
+  // --- Load audio (sekali) + init WaveSurfer ---
+  useEffect(() => {
+    if (!loadedFile) return;
 
     let cancelled = false;
     let objectUrl: string | null = null;
@@ -111,43 +155,7 @@ export function WaveformView() {
   useEffect(() => {
     if (!decoded) return;
     syncRegionToWaveSurfer(decoded.durationMs);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectParams?.region, decoded]);
-
-  function syncRegionToWaveSurfer(durationMs: number) {
-    const regions = regionPluginRef.current;
-    // M1: baca region via getState(), bukan closure render — fungsi ini
-    // dipanggil dari callback `ws.on('ready')` yang dibuat di render awal,
-    // sehingga closure bisa stale jika user mengubah region sebelum ready.
-    const region = useAudioStore.getState().effectParams?.region;
-    if (!regions || !region) return;
-
-    const start = Math.max(0, region.startMs) / 1000;
-    const end = Math.min(durationMs, region.endMs) / 1000;
-    if (end <= start) return;
-
-    const existing = regions
-      .getRegions()
-      .find((r) => r.id === REGION_ID);
-
-    if (existing) {
-      const curStart = Math.round(existing.start * 1000);
-      const curEnd = Math.round(existing.end * 1000);
-      if (Math.abs(curStart - region.startMs) <= EPS_MS &&
-          Math.abs(curEnd - region.endMs) <= EPS_MS) {
-        return; // sudah sinkron, hindari loop
-      }
-      existing.setOptions({ start, end });
-    } else {
-      regions.addRegion({
-        id: REGION_ID,
-        start,
-        end,
-        content: 'Trim',
-        color: 'rgba(16, 185, 129, 0.18)',
-      });
-    }
-  }
 
   const handlePlayToggle = () => {
     if (!decoded || !effectParams) return;
