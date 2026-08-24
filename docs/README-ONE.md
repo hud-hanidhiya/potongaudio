@@ -1,4 +1,4 @@
-# Potong-Audio (Desktop App)
+# PotongAudio (Desktop App)
 
 > **Status: Fase 0 (PoC & Validasi Teknis) SELESAI.** Aplikasi sudah bisa
 > di-build menjadi installer NSIS, sidecar FFmpeg/FFprobe berjalan, dan
@@ -27,7 +27,7 @@ Hybrid: **React (frontend/UI)** + **Rust via Tauri (backend/processing)**.
 
 ## Keputusan Scope yang Sudah Dikunci (Fase 0)
 
-- Nama aplikasi: **Potong-Audio**; bundle identifier `com.potongaudio.app`
+- Nama aplikasi: **PotongAudio**; bundle identifier `com.potongaudio.app`
 - Lisensi: **GPL-3.0** (mengizinkan bundling FFmpeg full-GPL)
 - Single-region trim saja untuk v1; **multi-region ditunda ke v2**
 - **Undo/redo ditunda ke v2** (cukup tombol Reset)
@@ -44,7 +44,7 @@ potongaudio/
 ├── vite.config.ts                # root: 'src', outDir: '../dist'
 ├── tsconfig.json / tsconfig.node.json
 ├── src/                          (frontend React)
-│   ├── App.tsx                   ✅ menampilkan versi FFmpeg sidecar + header "Potong-Audio"
+│   ├── App.tsx                   ✅ menampilkan versi FFmpeg sidecar + header "PotongAudio"
 │   ├── main.tsx, index.css, index.html
 │   ├── components/
 │   │   ├── upload/Dropzone.tsx

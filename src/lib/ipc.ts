@@ -9,7 +9,7 @@
 
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-import type { EffectParams, ProbeResult } from '../types/audio.types';
+import { type EffectParams, type ProbeResult, SUPPORTED_EXTENSIONS } from '../types/audio.types';
 
 // ---------------------------------------------------------------------
 // get_ffmpeg_version
@@ -172,7 +172,7 @@ export async function pickOpenAudioFile(): Promise<string | null> {
   const result = await open({
     multiple: false,
     filters: [
-      { name: 'Audio', extensions: ['mp3', 'wav', 'm4a', 'aac', 'flac', 'ogg', 'wma'] },
+      { name: 'Audio', extensions: [...SUPPORTED_EXTENSIONS] },
     ],
   });
   return typeof result === 'string' ? result : null;

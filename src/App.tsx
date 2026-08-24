@@ -6,6 +6,7 @@ import { WaveformView } from './components/workspace/WaveformView';
 import { useAudioStore } from './store/useAudioStore';
 import { getFfmpegVersion } from './lib/ipc';
 
+
 export default function App() {
   const loadedFile = useAudioStore((s) => s.loadedFile);
   const [ffmpegVersion, setFfmpegVersion] = useState<string | null>(null);
@@ -25,9 +26,9 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#0f172a] p-6 text-slate-100">
+    <div className="min-h-screen bg-navy p-6 text-slate-100">
       <header className="mb-6 flex items-baseline justify-between">
-        <h1 className="text-lg font-semibold text-cyan-400">Potong-Audio</h1>
+        <h1 className="text-lg font-semibold text-cyan">PotongAudio</h1>
         {ffmpegVersion && (
           <span className="text-xs text-slate-500">{ffmpegVersion}</span>
         )}

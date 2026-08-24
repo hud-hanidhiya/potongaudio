@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Potong-Audio",
+  "productName": "PotongAudio",
   "version": "0.1.0",
   "identifier": "com.potongaudio.app",
 
@@ -15,7 +15,7 @@
   "app": {
     "windows": [
       {
-        "title": "Potong-Audio",
+        "title": "PotongAudio",
         "width": 900,
         "height": 700,
         "minWidth": 700,

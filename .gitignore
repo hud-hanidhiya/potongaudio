@@ -8,3 +8,8 @@ src-tauri/target/
 # Binary sidecar FFmpeg/FFprobe — melebihi batas 100MB GitHub, tidak di-track.
 # Download manual ke src-tauri/binaries/ (lihat POC_FINDINGS.md / README).
 src-tauri/binaries/*
+
+# Local agent / Kilo runtime state (tidak di-track)
+.kilo/
+.kilocode/
+kilo.jsonc

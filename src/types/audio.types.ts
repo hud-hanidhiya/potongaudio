@@ -79,3 +79,6 @@ export function createDefaultEffectParams(
     outputBitrateKbps: 192,
   };
 }
+
+export const SUPPORTED_EXTENSIONS = ['mp3', 'wav', 'm4a', 'aac', 'flac', 'ogg', 'wma'] as const;
+export type SupportedExtension = (typeof SUPPORTED_EXTENSIONS)[number];

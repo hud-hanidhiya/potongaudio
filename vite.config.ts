@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
-// Konfigurasi Vite untuk Potong-Audio — dua penyesuaian khusus Tauri
+// Konfigurasi Vite untuk PotongAudio — dua penyesuaian khusus Tauri
 // (bukan default Vite biasa), lihat komentar inline di bawah.
 export default defineConfig({
   plugins: [react(), tailwindcss()],

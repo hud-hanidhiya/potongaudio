@@ -1,4 +1,4 @@
-# POC_FINDINGS.md — Hasil Proof of Concept Fase 0 (Potong-Audio)
+# POC_FINDINGS.md — Hasil Proof of Concept Fase 0 (PotongAudio)
 
 > Dokumen ini menjawab 8 pertanyaan PoC secara eksplisit (ya/tidak) dengan
 > bukti yang diambil langsung dari eksekusi di Windows x86_64 (build host
@@ -87,9 +87,9 @@ memakai fixture di Linux lolos.
 | `ffmpeg` (BtbN gpl full, linux64) | Linux | ~139 MB |
 | `ffprobe` (BtbN gpl full, linux64) | Linux | ~139 MB |
 | `potong-audio.exe` (release, stripped) | Windows | 4.44 MB |
-| `Potong-Audio_0.1.0_x64-setup.exe` (NSIS) | Windows | 80.13 MB (84.012.300 byte — terkonfirmasi via artifact CI `build-windows`) |
-| `Potong-Audio_0.1.0_amd64.AppImage` | Linux | 177 MB |
-| `Potong-Audio_0.1.0_amd64.deb` | Linux | 114 MB |
+| `PotongAudio_0.1.0_x64-setup.exe` (NSIS) | Windows | 80.13 MB (84.012.300 byte — terkonfirmasi via artifact CI `build-windows`) |
+| `PotongAudio_0.1.0_amd64.AppImage` | Linux | 177 MB |
+| `PotongAudio_0.1.0_amd64.deb` | Linux | 114 MB |
 
 **Keputusan sementara: BtbN gpl full** untuk Fase 0/1 karena:
 - Satu build mencakup semua format yang dibutuhkan v1

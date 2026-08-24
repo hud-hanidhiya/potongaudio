@@ -1,4 +1,4 @@
-# Potong-Audio
+# PotongAudio
 
 **Potong audio dengan presisi.**
 
@@ -14,7 +14,7 @@ NSIS ter-build. Hasil lengkap ada di [`POC_FINDINGS.md`](./POC_FINDINGS.md).
 
 - `cargo test` — 39 unit test lulus (tanpa perlu binary FFmpeg asli)
 - `cargo build --features tauri-runtime` — lulus
-- `cargo tauri build` — lulus, installer NSIS `Potong-Audio_0.1.0_x64-setup.exe` (80 MB)
+- `cargo tauri build` — lulus, installer NSIS `PotongAudio_0.1.0_x64-setup.exe` (80 MB)
 - `npm run build` — lulus (tsc + vite)
 
 ## Fitur (kondisi sekarang)
@@ -52,6 +52,9 @@ scope). Code signing Windows ditunda ke Fase 5.
 - FFmpeg/FFprobe binary di `src-tauri/binaries/` (sudah disediakan untuk
   `x86_64-pc-windows-msvc`; untuk Linux perlu download build `linux64-gpl`
   dengan nama `ffmpeg-x86_64-unknown-linux-gnu` / `ffprobe-x86_64-unknown-linux-gnu`)
+- Setup pertama klon baru: jalankan `npm run setup:ffmpeg` untuk otomatis
+  mendownload & memverifikasi FFmpeg/FFprobe build BtbN (gpl) yang sama
+  dipakai di CI. Script tersedia untuk Linux/macOS (`.sh`) dan Windows (`.ps1`).
 
 ## Development
 
@@ -76,7 +79,7 @@ cargo tauri build                # menghasilkan installer (NSIS di Windows, AppI
 ```
 
 Output di `src-tauri/target/release/bundle/`:
-- Windows: `nsis/Potong-Audio_0.1.0_x64-setup.exe`
+- Windows: `nsis/PotongAudio_0.1.0_x64-setup.exe`
 - Linux: `appimage/` (butuh host Linux)
 
 ## Struktur Project

@@ -2,7 +2,7 @@
 name = "potong-audio"
 version = "0.1.0"
 license = "GPL-3.0"
-description = "Potong-Audio - offline desktop audio trimming app"
+description = "PotongAudio - offline desktop audio trimming app"
 edition = "2021"
 
 # ⚠️ CATATAN VERIFIKASI: dependency di bawah ini BELUM di-cargo-build

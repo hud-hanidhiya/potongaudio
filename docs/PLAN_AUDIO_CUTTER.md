@@ -1,5 +1,5 @@
 # PLAN_AUDIO_CUTTER.md
-## Potong-Audio — Desktop App Offline (Cross-Platform)
+## PotongAudio — Desktop App Offline (Cross-Platform)
 
 **Status:** Draft v3 (arsitektur hybrid: React UI + Rust native processing) — Fase 0 (PoC) SELESAI, lihat `POC_FINDINGS.md`
 **Tanggal:** 2026-08-16

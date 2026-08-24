@@ -4,13 +4,18 @@
  * di lib/ipc.ts), BUKAN <input type="file"> HTML biasa, supaya user dapat
  * path file asli di disk (dibutuhkan Rust command, bukan Blob/File object
  * browser).
+ *
+ * Drag-drop native via Tauri webview event (tauri://file-drop) — memberi
+ * path file asli seperti halnya dialog picker, bukan Blob object.
+ * Event tauri://file-drop-hover mengatur state isDragActive untuk visual
+ * feedback; tauri://file-drop-cancelled mereset state bila drag dibatalkan.
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { pickOpenAudioFile, probeAudioFile } from '../../lib/ipc';
+import { SUPPORTED_EXTENSIONS } from '../../types/audio.types';
 import { useAudioStore } from '../../store/useAudioStore';
-
-const SUPPORTED_EXTENSIONS = ['mp3', 'wav', 'm4a', 'aac', 'flac', 'ogg', 'wma'];
 
 export function Dropzone() {
   const loadFile = useAudioStore((s) => s.loadFile);
@@ -40,31 +45,45 @@ export function Dropzone() {
     if (filePath) await openAndLoad(filePath);
   }, [openAndLoad]);
 
-  // Catatan drag-drop: Tauri v2 punya event native `tauri://file-drop` yang
-  // memberi path file asli (beda dari drag-drop HTML5 biasa yang cuma kasih
-  // Blob). Wiring event listener itu adalah TODO Fase 1 (T1.5) — di sini
-  // baru kerangka handler + state visual `isDragActive`-nya saja.
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragActive(true);
-  }, []);
+  useEffect(() => {
+    const unsubs: UnlistenFn[] = [];
 
-  const handleDragLeave = useCallback(() => setIsDragActive(false), []);
+    const setupListeners = async () => {
+      unsubs.push(
+        await listen<string[]>('tauri://file-drop', (event) => {
+          const paths = event.payload;
+          if (paths.length > 0) {
+            setIsDragActive(false);
+            void openAndLoad(paths[0]);
+          }
+        })
+      );
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragActive(false);
-    // TODO(T1.5): ganti dengan listener tauri://file-drop, lihat catatan di atas.
-  }, []);
+      unsubs.push(
+        await listen<string[]>('tauri://file-drop-hover', () => {
+          setIsDragActive(true);
+        })
+      );
+
+      unsubs.push(
+        await listen('tauri://file-drop-cancelled', () => {
+          setIsDragActive(false);
+        })
+      );
+    };
+
+    void setupListeners();
+
+    return () => {
+      unsubs.forEach((fn) => fn());
+    };
+  }, [openAndLoad]);
 
   return (
     <div
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
       className={[
         'flex flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed p-16 text-center transition-colors',
-        isDragActive ? 'border-cyan-400 bg-cyan-950/20' : 'border-slate-700',
+        isDragActive ? 'border-cyan bg-cyan/20' : 'border-slate-700',
       ].join(' ')}
     >
       <p className="text-slate-300">
@@ -74,9 +93,9 @@ export function Dropzone() {
         type="button"
         onClick={handleBrowseClick}
         disabled={isLoading}
-        className="rounded-lg bg-cyan-500 px-4 py-2 font-medium text-slate-900 hover:bg-cyan-400 disabled:opacity-50"
+        className="rounded-lg bg-cyan px-4 py-2 font-medium text-slate-900 hover:bg-cyan/90 disabled:opacity-50"
       >
-        {isLoading ? 'Memuat...' : 'Pilih File'}
+        {isLoading ? 'Memuatan...' : 'Pilih File'}
       </button>
       <p className="text-xs text-slate-500">
         Format didukung: {SUPPORTED_EXTENSIONS.join(', ')}

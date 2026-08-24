@@ -1,5 +1,5 @@
 # TECH_IMPLEMENTATION_PLAN.md
-## Potong-Audio — Technical Implementation Plan
+## PotongAudio — Technical Implementation Plan
 
 **Companion dokumen dari:** `PLAN_AUDIO_CUTTER.md` (v3)
 **Tujuan dokumen ini:** breakdown teknis siap-eksekusi — struktur project, kontrak data/IPC, urutan implementasi per fase, dan definisi "selesai" untuk tiap task.
