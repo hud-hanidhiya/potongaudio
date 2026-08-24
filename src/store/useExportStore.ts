@@ -33,6 +33,19 @@ export const useExportStore = create<ExportStoreState>((set, get) => ({
   ...initialState,
 
   startExport: async (args) => {
+    // AC-04: jangan biarkan output menimpa file sumber tanpa konfirmasi.
+    // Guardrail "Operasi file destruktif" melarang auto-overwrite source —
+    // kita TOLAK eksplisit (bukan confirm dialog) supaya aman secara default.
+    if (args.outputPath.toLowerCase() === args.params.sourceFilePath.toLowerCase()) {
+      set({
+        ...initialState,
+        status: 'error',
+        errorMessage:
+          'Path output tidak boleh sama dengan file sumber. Pilih nama atau lokasi lain.',
+      });
+      return;
+    }
+
     set({ ...initialState, status: 'running' });
 
     try {

@@ -41,6 +41,7 @@
 | T3.1 | Wiring IPC export/cancel ke Rust | `src/lib/ipc.ts` | `invoke('export_audio', {...})` terhubung; event `export://progress\|done\|error` didengarkan; `cargo build --features tauri-runtime` + `npm run build` hijau | ☑ |
 | T3.2 | Save dialog native + startExport flow | `src/components/workspace/ExportDock.tsx`, `src/store/useExportStore.ts` | Klik Save → `pickSaveLocation` → `exportAudio` dengan EffectParams; progress & cancel tersambung | ☑ |
 | T4.1 | Integrasi penuh frontend↔backend (status idle→running→done/error/cancelled) | `ExportDock.tsx`, `useExportStore.ts`, `ipc.ts` | Alur export end-to-end konsisten & ter-compile; `EffectParams` TS↔Rust cocok (camelCase) | ☑ |
+| T4.2 | AC-04: tolak output path == input (jangan overwrite source) | `src/store/useExportStore.ts`, `src/store/useExportStore.test.ts` | `startExport` menolak kalau outputPath == sourceFilePath (case-insensitive) + pesan error ID; `npm test` 3/3 lulus | ☑ |
 | T5.x | Packaging & release | `.github/workflows/` | — | ☐ |
 
 ## Backlog v2 (jangan dikerjakan sekarang)

@@ -12,6 +12,13 @@
 > tauri-runtime` + `npm run build`; `cargo test` 39/39. Sisa (bukan wiring):
 > AC-04 (output==input belum ditolak), preserve-pitch export butuh library
 > GPL (rubberband) — di luar build LGPL, lihat T2.5/spec.
+> **Status AC-04 (T4.2): SELESAI.** `startExport` menolak outputPath == sourceFilePath
+> (case-insensitive) sebelum IPC/FFmpeg dijalankan; pesan error Bahasa Indonesia
+> ditampilkan lewat UI error yang sudah ada. `npm test` 3/3 lulus, `npm run build` hijau.
+> `EffectParams` (camelCase). Build hijau: `cargo build --features
+> tauri-runtime` + `npm run build`; `cargo test` 39/39. Sisa (bukan wiring):
+> AC-04 (output==input belum ditolak), preserve-pitch export butuh library
+> GPL (rubberband) — di luar build LGPL, lihat T2.5/spec.
 
 ## 0. SOURCE REFERENCES
 - `docs/03-spec.md` — Fitur #4 (waveform), #5 (trim single-region), #6
