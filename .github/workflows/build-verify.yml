@@ -91,6 +91,14 @@ jobs:
         working-directory: src-tauri
         run: cargo test --verbose
 
+      - name: cargo fmt --check
+        working-directory: src-tauri
+        run: cargo fmt --check
+
+      - name: cargo clippy (tauri-runtime, -D warnings)
+        working-directory: src-tauri
+        run: cargo clippy --all-targets --features tauri-runtime -- -D warnings
+
       # -----------------------------------------------------------------
       # 3. Download binary FFmpeg/FFprobe Linux — versi DIPIN, lihat
       #    catatan FFMPEG_RELEASE_TAG di atas.
@@ -153,6 +161,10 @@ jobs:
       # -----------------------------------------------------------------
       - name: npm ci
         run: npm ci
+
+      # M7: lint gate frontend — sama seperti lokal (`npm run lint`).
+      - name: Lint frontend (eslint)
+        run: npm run lint
 
       - name: npm run build (tsc --noEmit + vite build)
         run: npm run build
@@ -242,6 +254,15 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: "src-tauri -> target"
+
+      # M7: lint gate Rust — identik dengan lokal (fmt + clippy -D warnings).
+      - name: Lint Rust (fmt)
+        working-directory: src-tauri
+        run: cargo fmt --check
+
+      - name: Lint Rust (clippy, -D warnings)
+        working-directory: src-tauri
+        run: cargo clippy --all-targets --features tauri-runtime -- -D warnings
 
       - name: cargo test (default features, tanpa Tauri)
         working-directory: src-tauri
