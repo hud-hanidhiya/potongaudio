@@ -28,8 +28,8 @@ pub struct FilterPlan {
 const ATEMPO_MIN: f32 = 0.5;
 const ATEMPO_MAX: f32 = 2.0;
 
-pub fn build_filter_plan(params: &EffectParams) -> AppResult<FilterPlan> {
-    validate_params(params)?;
+pub fn build_filter_plan(params: &EffectParams, total_duration_ms: u64) -> AppResult<FilterPlan> {
+    validate_params(params, total_duration_ms)?;
 
     let mut filters: Vec<String> = Vec::new();
 
@@ -151,12 +151,22 @@ fn codec_args_for_format(
     }
 }
 
-fn validate_params(params: &EffectParams) -> AppResult<()> {
+fn validate_params(params: &EffectParams, total_duration_ms: u64) -> AppResult<()> {
     if params.region.end_ms <= params.region.start_ms {
         return Err(AppError::InvalidParams {
             detail: format!(
                 "region end_ms ({}) harus lebih besar dari start_ms ({})",
                 params.region.end_ms, params.region.start_ms
+            ),
+        });
+    }
+    // Defense-in-depth (H3): region tidak boleh melebihi durasi file.
+    // Pembanding `>` ketat — end == durasi sah (trim sampai akhir file).
+    if params.region.end_ms > total_duration_ms {
+        return Err(AppError::InvalidParams {
+            detail: format!(
+                "region end_ms ({}) melebihi durasi file ({} ms)",
+                params.region.end_ms, total_duration_ms
             ),
         });
     }
@@ -185,15 +195,20 @@ mod tests {
         }
     }
 
+    /// Durasi file acuan untuk test — region default (1000..5000) berada
+    /// di dalamnya. Signature `build_filter_plan` menerima durasi file
+    /// sejak H3 (validasi end_ms tidak boleh melebihi durasi).
+    const DURATION_MS: u64 = 10_000;
+
     #[test]
     fn trim_selalu_ada_di_chain() {
-        let plan = build_filter_plan(&base_params()).unwrap();
+        let plan = build_filter_plan(&base_params(), DURATION_MS).unwrap();
         assert!(plan.filter_complex.contains("atrim=start=1000ms:end=5000ms"));
     }
 
     #[test]
     fn gain_0db_di_skip_dari_chain() {
-        let plan = build_filter_plan(&base_params()).unwrap();
+        let plan = build_filter_plan(&base_params(), DURATION_MS).unwrap();
         assert!(!plan.filter_complex.contains("volume="));
     }
 
@@ -201,7 +216,7 @@ mod tests {
     fn gain_nonzero_masuk_chain() {
         let mut p = base_params();
         p.gain_db = 6.0;
-        let plan = build_filter_plan(&p).unwrap();
+        let plan = build_filter_plan(&p, DURATION_MS).unwrap();
         assert!(plan.filter_complex.contains("volume=6dB"));
     }
 
@@ -209,7 +224,7 @@ mod tests {
     fn fade_out_dihitung_dari_durasi_setelah_trim_tanpa_speed_change() {
         let mut p = base_params();
         p.fade.out_ms = 500;
-        let plan = build_filter_plan(&p).unwrap();
+        let plan = build_filter_plan(&p, DURATION_MS).unwrap();
         // durasi trim = 4000ms, fade_out 500ms -> start di 3500ms
         assert!(plan.filter_complex.contains("afade=t=out:st=3500ms:d=500ms"));
     }
@@ -219,7 +234,7 @@ mod tests {
         let mut p = base_params();
         p.speed.ratio = 2.0; // durasi 4000ms -> jadi 2000ms setelah 2x speed
         p.fade.out_ms = 500;
-        let plan = build_filter_plan(&p).unwrap();
+        let plan = build_filter_plan(&p, DURATION_MS).unwrap();
         // durasi setelah speed = 2000ms, fade_out 500ms -> start di 1500ms
         assert!(plan.filter_complex.contains("afade=t=out:st=1500ms:d=500ms"));
     }
@@ -228,7 +243,7 @@ mod tests {
     fn fade_out_lebih_panjang_dari_durasi_di_clamp_ke_nol() {
         let mut p = base_params();
         p.fade.out_ms = 10_000; // lebih panjang dari durasi trim 4000ms
-        let plan = build_filter_plan(&p).unwrap();
+        let plan = build_filter_plan(&p, DURATION_MS).unwrap();
         assert!(plan.filter_complex.contains("afade=t=out:st=0ms:d=10000ms"));
     }
 
@@ -257,7 +272,7 @@ mod tests {
     fn region_end_kurang_dari_start_ditolak() {
         let mut p = base_params();
         p.region = Region { start_ms: 5000, end_ms: 1000 };
-        let result = build_filter_plan(&p);
+        let result = build_filter_plan(&p, DURATION_MS);
         assert!(result.is_err());
     }
 
@@ -265,7 +280,7 @@ mod tests {
     fn speed_ratio_nol_ditolak() {
         let mut p = base_params();
         p.speed.ratio = 0.0;
-        let result = build_filter_plan(&p);
+        let result = build_filter_plan(&p, DURATION_MS);
         assert!(result.is_err());
     }
 
@@ -273,7 +288,7 @@ mod tests {
     fn m4r_pakai_codec_aac_sama_seperti_m4a() {
         let mut p = base_params();
         p.output_format = OutputFormat::M4r;
-        let plan = build_filter_plan(&p).unwrap();
+        let plan = build_filter_plan(&p, DURATION_MS).unwrap();
         assert!(plan.codec_args.contains(&"aac".to_string()));
     }
 
@@ -283,7 +298,7 @@ mod tests {
         p.speed.ratio = 1.5;
         p.fade.in_ms = 200;
         p.gain_db = 3.0;
-        let plan = build_filter_plan(&p).unwrap();
+        let plan = build_filter_plan(&p, DURATION_MS).unwrap();
 
         let atrim_pos = plan.filter_complex.find("atrim").unwrap();
         let atempo_pos = plan.filter_complex.find("atempo").unwrap();
@@ -293,5 +308,37 @@ mod tests {
         assert!(atrim_pos < atempo_pos);
         assert!(atempo_pos < afade_pos);
         assert!(afade_pos < volume_pos);
+    }
+
+    // --- H3: region vs durasi file ---
+
+    #[test]
+    fn region_end_melebihi_durasi_file_ditolak() {
+        let mut p = base_params();
+        p.region = Region { start_ms: 1000, end_ms: 20_000 }; // > DURATION_MS (10_000)
+        let result = build_filter_plan(&p, DURATION_MS);
+        assert!(result.is_err());
+        let err = result.err().unwrap().to_string();
+        assert!(err.contains("melebihi durasi file"));
+    }
+
+    #[test]
+    fn region_end_sama_dengan_durasi_file_lolos() {
+        // Pembanding `>` ketat: end == durasi sah.
+        let mut p = base_params();
+        p.region = Region { start_ms: 1000, end_ms: 10_000 };
+        let plan = build_filter_plan(&p, DURATION_MS).unwrap();
+        assert!(plan.filter_complex.contains("end=10000ms"));
+    }
+
+    #[test]
+    fn durasi_nol_menolak_region_positif() {
+        // Dokumentasi perilaku: durasi 0 berarti tidak ada audio; region
+        // apapun dengan end_ms >= 1 otomatis > durasi → ditolak oleh cek
+        // `end_ms > total_duration_ms` (region 0..0 sudah ditolak cek end>start).
+        let mut p = base_params();
+        p.region = Region { start_ms: 0, end_ms: 1 };
+        let result = build_filter_plan(&p, 0);
+        assert!(result.is_err());
     }
 }

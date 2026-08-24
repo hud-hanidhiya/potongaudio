@@ -126,7 +126,7 @@ mod tauri_wiring {
         total_duration_ms: u64,
         output_path: String, // hasil dari native save dialog (Fase T4.5)
     ) -> Result<ExportResult, AppError> {
-        let plan = build_filter_plan(&params)?;
+        let plan = build_filter_plan(&params, total_duration_ms)?;
 
         let mut args: Vec<String> = vec![
             "-y".into(),
