@@ -108,6 +108,12 @@ Push tag `v*` (mis. `git tag v0.1.0 && git push origin v0.1.0`) memicu
 GitHub Release berisi installer NSIS, AppImage, dan `.deb`. Installer rilis
 **unsigned** (T0.7 code signing ditunda).
 
+**Rilis pertama sudah terbit:** [v0.1.0](../../releases/latest) —
+`PotongAudio_0.1.0_x64-setup.exe` (71.5 MB, Windows),
+`PotongAudio_0.1.0_amd64.AppImage` (163 MB) & `.deb` (97.9 MB, Linux).
+SHA-256 tiap asset tercantum di halaman release dan di
+[`docs/08-qa-release-checklist.md`](./docs/08-qa-release-checklist.md).
+
 ## Struktur Project
 
 ```

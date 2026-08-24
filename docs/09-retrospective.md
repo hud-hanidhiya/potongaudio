@@ -70,7 +70,16 @@ dan pipeline rilis otomatis.
   IPC — source tidak pernah ke-overwrite diam-diam.
 - **Pipeline rilis additive** di `build-verify.yml`: tag `v*` → job
   `publish-release` mempublikasikan GitHub Release dari artifact yang sudah
-  di-build (tanpa mengubah job verifikasi yang sudah hijau).
+  di-build (tanpa mengubah job verifikasi yang sudah hijau). Terbukti end-to-
+  end: Release **v0.1.0** @ `e757822`, 3 asset + SHA-256. Pelajaran penting:
+  butuh **3 iterasi** untuk membuat job additive benar-benar jalan —
+  (1) menyebut `permissions:` eksplisit membuat scope lain *none* (wajib
+  tambah `actions:read` utk download-artifact); (2) clippy dengan feature
+  tauri-runtime mengeksekusi build script yang memvalidasi externalBin →
+  HARUS setelah langkah download sidecar; (3) `gh release create` butuh
+  konteks `.git` → job publish wajib checkout. Moralinnya: **job CI baru
+  WAJIB dieksekusi nyata minimal sekali sebelum dipercaya**, sama seperti
+  kode.
 
 ### Keputusan / catatan
 - **Speed/pitch**: `atempo` di export tetap mengubah pitch; preservasi pitch

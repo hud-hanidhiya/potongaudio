@@ -73,6 +73,39 @@ tempel pesan compiler error asli, bukan cuma deskripsi)
 
 ---
 
+## Entry: 2026-08-24 — Pipeline rilis gagal 3× berlapis (semua ter-fix, Release v0.1.0 terbit)
+- Environment: GitHub Actions (`build-verify.yml` job `publish-release`, tag `v0.1.0`)
+- Expected behavior: push tag → build 2 OS hijau → GitHub Release terbit
+  dengan 3 asset installer.
+- Actual behavior (berlapis, satu per satu tersingkap):
+  1. **Run #6** — build ✅, publish exit 1 @12s, tanpa release. Log (dari user):
+     download-artifact tidak jalan. Root cause: menyebut blok `permissions:`
+     eksplisit membuat semua scope lain *none*; `download-artifact` butuh
+     **`actions: read`**.
+  2. **Run #9** — kedua job build gagal cepat (Linux exit 101, Windows exit 1),
+     log: `resource path binaries/ffmpeg-<triple> doesn't exist`. Root cause:
+     langkah baru `cargo clippy --features tauri-runtime` mengeksekusi build
+     script tauri-build yang memvalidasi `externalBin` — dijalankan SEBELUM
+     langkah download sidecar FFmpeg. Lokal tidak kena karena
+     `src-tauri/binaries/` sudah terisi via `npm run setup:ffmpeg`.
+  3. **Run #12** — build ✅ + lint ✅ + download artifact ✅ (digest cocok),
+     publish gagal: `fatal: not a git repository`. Root cause: job publish
+     tanpa `actions/checkout`; `gh release create` membaca konteks repo dari
+     working directory.
+- Fix (masing-masing 1 commit): tambah `actions: read` pada permissions job
+  publish (`4f9efcb`); pindahkan clippy ke setelah download sidecar di kedua
+  job (`f7b3312`); tambah checkout di job publish (`e757822`). Tag `v0.1.0`
+  dipindah mengikuti tiap fix (delete remote tag + push ulang).
+- Hasil: run tag hijau penuh → **Release v0.1.0 terbit otomatis**
+  (`e757822`), asset: NSIS 71.5 MB / AppImage 163 MB / .deb 97.9 MB.
+- Langkah berikutnya: human-gate smoke manual (lihat bagian HUMAN-GATE di
+  `08-qa-release-checklist.md`); pertimbangkan `workflow_dispatch` dry-run
+  untuk menguji job release TANPA perlu memindah tag publik.
+- **Menyentuh data model / kontrak API / transisi status?**
+  [ ] Ya / [x] Tidak — murni CI/workflow.
+
+---
+
 ## Template untuk entry baru
 
 ```markdown

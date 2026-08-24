@@ -159,9 +159,14 @@ Commit yang sudah dilakukan:
 - [x] `npm run build` PASS; `npm run lint` PASS; `npm run test` PASS (3/3).
 - [x] `cargo clippy -D warnings` + `cargo fmt --check` PASS (termasuk tauri-runtime).
 - [x] CI `build-verify.yml` hijau di Linux + Windows (lint gate ditambahkan).
-- [ ] Smoke manual: ganti file (H2), tooltip checkbox (H1), End>durasi
-      ter-clamp (H3), cancel saat export (M3), waveform+play+export
-      jalan dengan CSP aktif (H4).
+- [x] **Release v0.1.0 TERBIT** @ `e757822` — job publish sukses setelah 3
+      root-cause ditemukan & difix (`actions:read`, clippy tauri-runtime
+      harus setelah download sidecar/externalBin, checkout utk konteks gh);
+      detail di `07-debug-log.md`, asset + SHA-256 di `08-qa-release-checklist.md`.
+- [ ] Smoke manual (HUMAN-GATE, to-do HG1 di task plan): ganti file (H2),
+      tooltip checkbox (H1), End>durasi ter-clamp (H3), cancel saat export
+      (M3), waveform+play+export jalan dengan CSP aktif (H4) — checklist
+      lengkap di bagian HUMAN-GATE `08-qa-release-checklist.md`.
 
 ## 5. STAGE 5 (kit): pembaruan dokumen oleh eksekutor
 - Salin plan ini ke `docs/04a-implementation-plan.md` ✅
