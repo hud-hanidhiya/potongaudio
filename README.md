@@ -10,8 +10,9 @@ trim, efek audio (fade, gain, speed), dan konversi format audio.
 **MVP v1.0 — SELESAI (Fase 0–3 + pipeline rilis).** Seluruh fitur inti
 sudah terimplementasi dan terverifikasi:
 
-- `cargo test` — 39 unit test lulus (tanpa perlu binary FFmpeg asli)
+- `cargo test` — 42 unit test lulus (tanpa perlu binary FFmpeg asli)
 - `cargo build --features tauri-runtime` — lulus
+- Lint gate: `npm run lint` (eslint) + `cargo fmt --check` + `cargo clippy --all-targets --features tauri-runtime -- -D warnings` — bersih
 - `cargo tauri build` — lulus, installer NSIS (Windows) + AppImage & `.deb` (Linux)
 - `npm run build` — lulus (tsc strict + vite)
 - CI `build-verify.yml` hijau di Windows & Linux; push tag `v*` otomatis
@@ -75,10 +76,17 @@ peringatan SmartScreen).
 ## Development
 
 ```bash
-npm install                       # dependencies frontend
-cd src-tauri && cargo test        # 39 unit test (cepat, tanpa Tauri)
-npm run setup:ffmpeg            # download & verifikasi binary FFmpeg/FFprobe LGPL
-cargo tauri dev                  # jalankan app (feature tauri-runtime aktif otomatis)
+# dari root repo:
+npm install
+npm run setup:ffmpeg              # download & verifikasi binary FFmpeg/FFprobe LGPL
+
+# backend (folder src-tauri):
+cd src-tauri
+cargo test                        # unit test cepat, tanpa dependency Tauri
+
+# jalankan app (kembali ke root repo):
+cd ..
+cargo tauri dev                   # feature tauri-runtime aktif otomatis via tauri.conf.json
 ```
 
 ## Build Production

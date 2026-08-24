@@ -5,14 +5,10 @@ license = "GPL-3.0"
 description = "PotongAudio - offline desktop audio trimming app"
 edition = "2021"
 
-# ⚠️ CATATAN VERIFIKASI: dependency di bawah ini BELUM di-cargo-build
-# sungguhan dengan crate `tauri` (lihat catatan di src/main.rs dan
-# src/commands/export.rs untuk alasan teknisnya — toolchain sandbox
-# pembuatan dokumen ini tidak mendukung compile Tauri v2 penuh).
-# Versi dependency mengikuti dokumentasi resmi Tauri v2 per pengetahuan
-# terakhir yang tervalidasi; WAJIB dicek ulang dengan `cargo update` /
-# `cargo add` di project asli, terutama versi tauri-plugin-shell &
-# tauri-plugin-dialog yang rilisnya cepat berubah.
+# STATUS: dependency di bawah sudah terverifikasi compile & jalan —
+# `cargo build --features tauri-runtime`, clippy `-D warnings`, dan CI
+# hijau dua OS (build-verify.yml). Versi plugin mengikuti mayor `2`;
+# naikkan minor secara sadar lewat `cargo update` + jalankan ulang gate.
 
 [lib]
 name = "potong_audio_lib"
@@ -38,7 +34,7 @@ tokio = { version = "1", features = ["full"] }
 
 [features]
 # `cargo test` TANPA flag apapun = mode cepat, hanya modul inti (yang
-# sudah lulus 38 unit test). Untuk build aplikasi Tauri sungguhan
+# sudah lulus 42 unit test). Untuk build aplikasi Tauri sungguhan
 # (`cargo tauri dev` / `cargo tauri build`), feature ini WAJIB aktif —
 # lihat [package.metadata] di bawah untuk cara Tauri CLI mengaktifkannya
 # otomatis, atau jalankan manual dengan `cargo build --features tauri-runtime`.

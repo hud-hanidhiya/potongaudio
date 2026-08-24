@@ -1,20 +1,12 @@
 //! Versi struct EffectParams sesuai kontrak di TECH_IMPLEMENTATION_PLAN.md
 //! Section 2, DITAMBAH command Tauri `export_audio` dan `cancel_export`
-//! yang sesungguhnya (di-gate lewat feature flag, lihat catatan di bawah).
+//! (di-gate lewat feature flag, lihat catatan di bawah).
 //!
-//! ⚠️ STATUS VERIFIKASI: struct EffectParams/Region/Fade/Speed/OutputFormat
-//! di bawah sudah teruji (dipakai langsung oleh filter_builder.rs yang lulus
-//! 16 unit test). Command `export_audio`/`cancel_export` yang memakai tipe
-//! `tauri::AppHandle`, `tauri::State`, dan `tauri_plugin_shell` BELUM bisa
-//! dicompile di sandbox pembuatan dokumen ini — toolchain Rust yang tersedia
-//! (apt, versi 1.75) terlalu lama untuk crate `tauri` v2 (butuh Rust edition
-//! 2024), dan sandbox ini tidak punya dependensi sistem GUI (webkit2gtk dkk)
-//! yang dibutuhkan Tauri untuk build penuh. Kode di bawah ditulis mengikuti
-//! API resmi Tauri v2 + tauri-plugin-shell per dokumentasi, TAPI WAJIB
-//! di-`cargo build` di project Tauri asli sebagai bagian task T1.2/T3.1 —
-//! jangan anggap ini "selesai" sebelum itu. Bagian ini sengaja di-gate lewat
-//! `#[cfg(feature = "tauri-runtime")]` supaya tidak mengganggu `cargo test`
-//! untuk modul lain yang memang sudah teruji penuh tanpa dependensi Tauri.
+//! STATUS VERIFIKASI: seluruh file ini terverifikasi — struct kontrak
+//! teruji via filter_builder.rs, command layer ter-compile & clippy bersih
+//! dengan `--features tauri-runtime`, dan alur export lolos CI dua OS.
+//! Struct di bawah tetap di luar gate supaya `cargo test` (tanpa Tauri)
+//! bisa mengunci kontrak TS↔Rust.
 
 #[cfg(feature = "tauri-runtime")]
 use crate::error::AppError;
@@ -63,12 +55,10 @@ pub enum OutputFormat {
 }
 
 // ---------------------------------------------------------------------
-// BAGIAN DI BAWAH INI BELUM TERVERIFIKASI COMPILE (lihat catatan di atas).
-// Butuh Cargo.toml dengan minimal:
-//   tauri = { version = "2", features = [] }
-//   tauri-plugin-shell = "2"
-// dan feature flag "tauri-runtime" didefinisikan di [features] Cargo.toml
-// package project Tauri asli (bukan crate uji standalone ini).
+// STATUS: command di bawah terverifikasi compile + clippy `-D warnings`
+// (`--features tauri-runtime`) dan dieksekusi nyata oleh CI dua OS.
+// Gate `#[cfg(feature = "tauri-runtime")]` dipertahankan agar `cargo test`
+// default tetap cepat tanpa dependency Tauri.
 // ---------------------------------------------------------------------
 
 #[cfg(feature = "tauri-runtime")]

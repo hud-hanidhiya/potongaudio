@@ -3,10 +3,11 @@ pub mod error;
 pub mod ffmpeg;
 
 // ---------------------------------------------------------------------
-// ⚠️ BELUM TERVERIFIKASI COMPILE dengan Tauri sungguhan — lihat catatan
-// di commands/export.rs dan Cargo.toml soal keterbatasan sandbox.
-// Semua yang di-import di sini hanya ada kalau feature "tauri-runtime"
-// aktif (`cargo build --features tauri-runtime` atau `cargo tauri dev`).
+// STATUS: terverifikasi compile & jalan — `cargo build --features
+// tauri-runtime`, clippy `-D warnings` (dengan feature yang sama), dan CI
+// hijau dua OS. Semua yang di-import di sini hanya ada kalau feature
+// "tauri-runtime" aktif (`cargo tauri dev` / `--features tauri-runtime`);
+// `cargo test` default tetap tanpa Tauri agar cepat.
 // ---------------------------------------------------------------------
 #[cfg(feature = "tauri-runtime")]
 pub fn run() {
