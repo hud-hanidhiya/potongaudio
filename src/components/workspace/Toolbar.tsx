@@ -51,8 +51,11 @@ export function Toolbar() {
       <label className="flex items-center gap-2 text-xs text-slate-400">
         <input
           type="checkbox"
-          checked={effectParams.speed.preservePitch}
-          onChange={(e) => setSpeed({ preservePitch: e.target.checked })}
+          disabled
+          title="Belum aktif: butuh library time-stretch (belum dibundel di build LGPL)"
+          checked={false}
+          readOnly
+          onChange={() => {}}
         />
         Preserve pitch
       </label>
