@@ -36,7 +36,20 @@ export const useExportStore = create<ExportStoreState>((set, get) => ({
     // AC-04: jangan biarkan output menimpa file sumber tanpa konfirmasi.
     // Guardrail "Operasi file destruktif" melarang auto-overwrite source —
     // kita TOLAK eksplisit (bukan confirm dialog) supaya aman secara default.
-    if (args.outputPath.toLowerCase() === args.params.sourceFilePath.toLowerCase()) {
+    //
+    // M2: perbandingan case-insensitive HANYA untuk path bergaya Windows
+    // (filesystem case-insensitive). Di Linux `Song.MP3` vs `song.mp3` adalah
+    // file berbeda yang sah — jangan false-reject.
+    const { outputPath } = args;
+    const sourcePath = args.params.sourceFilePath;
+    const windowsStyle =
+      /^[a-zA-Z]:[\\/]/.test(outputPath) ||
+      /^[a-zA-Z]:[\\/]/.test(sourcePath) ||
+      (typeof navigator !== 'undefined' && /win/i.test(navigator.platform ?? ''));
+    const samePath =
+      outputPath === sourcePath ||
+      (windowsStyle && outputPath.toLowerCase() === sourcePath.toLowerCase());
+    if (samePath) {
       set({
         ...initialState,
         status: 'error',
@@ -69,8 +82,24 @@ export const useExportStore = create<ExportStoreState>((set, get) => ({
     const { jobId } = get();
     if (!jobId) return;
 
-    set({ status: 'cancelled' });
-    await ipcCancelExport(jobId);
+    // M3: status 'cancelled' HANYA setelah IPC cancel benar-benar sukses.
+    // Kalau invoke gagal / job tidak ditemukan, jangan biarkan UI mengaku
+    // cancelled padahal proses FFmpeg masih berjalan.
+    try {
+      const cancelled = await ipcCancelExport(jobId);
+      if (cancelled) {
+        set({ status: 'cancelled' });
+      } else {
+        set({
+          status: 'error',
+          errorMessage:
+            'Gagal membatalkan proses export — job tidak ditemukan atau sudah selesai.',
+        });
+      }
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err);
+      set({ status: 'error', errorMessage: `Gagal membatalkan proses export: ${detail}` });
+    }
   },
 
   reset: () => set({ ...initialState }),

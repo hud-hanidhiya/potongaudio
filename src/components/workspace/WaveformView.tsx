@@ -116,7 +116,10 @@ export function WaveformView() {
 
   function syncRegionToWaveSurfer(durationMs: number) {
     const regions = regionPluginRef.current;
-    const region = effectParams?.region;
+    // M1: baca region via getState(), bukan closure render — fungsi ini
+    // dipanggil dari callback `ws.on('ready')` yang dibuat di render awal,
+    // sehingga closure bisa stale jika user mengubah region sebelum ready.
+    const region = useAudioStore.getState().effectParams?.region;
     if (!regions || !region) return;
 
     const start = Math.max(0, region.startMs) / 1000;
