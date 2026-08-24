@@ -91,3 +91,8 @@ dan pipeline rilis otomatis.
   menulis Failure Mode di `04-architecture-notes.md` — belum ada di task
   plan sebelumnya).
 - Preservasi pitch export + preview speed (time-stretch library).
+- DEFERRED dari review v1.0 (`review.md`, 2026-08-24): clamp fade-in preview
+  (M4), satukan AudioContext (M5), hint preview speed + hapus dead code
+  `subscribeExportEvents` (M6), unregister job saat channel tutup + timeout
+  FFmpeg hang (M8), pengetatan scope fs `**` + duplikasi scope L7 (H4 langkah 2),
+  peaks dari AudioBuffer agar tidak decode dua kali (L1), prettier.

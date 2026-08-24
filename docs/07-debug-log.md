@@ -37,6 +37,42 @@ tempel pesan compiler error asli, bukan cuma deskripsi)
 
 ---
 
+## Entry: 2026-08-24 — Bug terkonfirmasi hasil code review v1.0 (batch fix)
+- Environment: Local (React 18 + Zustand + Tauri IPC) & Rust command layer
+- Expected vs Actual (4 bug, semua ditemukan lewat review statis `review.md`,
+  bukan crash — tipe bug yang paling mudah lolos ke rilis):
+  1. **H2 stale state ganti file** (`WaveformView.tsx`): saat file A gagal
+     dimuat lalu user membuka file B, pesan error A tetap tampil; buffer
+     audio A masih bisa diputar selama B loading; label "Pause" tertinggal.
+  2. **M3 race cancel** (`useExportStore.cancel`): status `'cancelled'`
+     diset SEBELUM `ipcCancelExport` selesai; invoke gagal → UI mengaku
+     cancelled padahal FFmpeg masih jalan. Return bool diabaikan.
+  3. **M2 false-reject Linux** (`startExport` AC-04): compare
+     `.toLowerCase()` kedua path menolak path berbeda-kapital yang SAH di
+     filesystem case-sensitive.
+  4. **M1 stale closure** (`syncRegionToWaveSurfer`): membaca `effectParams`
+     dari closure render; callback `ws.on('ready')` dibuat di render awal →
+     region awal bisa basi bila user mengubah region sebelum ready.
+- Langkah reproduksi: review manual per file (lihat `review.md` §HIGH/MEDIUM);
+  M2 juga terekspos oleh unit test AC-04 kapitalisasi Windows.
+- Fix:
+  - H2 → pola resmi React *adjust state during render* (banding
+    `loadedFile.path` dengan `prevFilePath`, reset 3 state saat render).
+  - M3 → set `'cancelled'` hanya setelah IPC sukses; `false`/throw → status
+    `'error'` + pesan Bahasa Indonesia.
+  - M2 → compare exact-case dulu; case-insensitive HANYA jika path bergaya
+    Windows (drive-letter `X:\` atau `navigator.platform` win32).
+  - M1 → fungsi dibaca region via `useAudioStore.getState()`.
+- Hasil: `npm run build` PASS, vitest 3/3, `cargo test` 42/42, eslint bersih.
+  Commit `[Review-H2]`, `[Review-M3][Review-M1][Review-M2]`.
+- Langkah berikutnya: smoke manual GUI (ganti file & cancel saat export).
+- **Menyentuh data model / kontrak API / transisi status?**
+  [ ] Ya / [x] Tidak — `EffectParams` tidak berubah; transisi status export
+  tetap `idle→running→done|error|cancelled` (M3 memperketat KAPAN 'cancelled'
+  boleh diset, tidak menambah status baru).
+
+---
+
 ## Template untuk entry baru
 
 ```markdown

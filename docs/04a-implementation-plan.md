@@ -1,49 +1,59 @@
-# Implementation Plan: Fase 5 — Packaging & Release (T5.1)
+# Implementation Plan: Review Fixes v1.0 (H1–H4/1, M1/M2/M3, M7, doc-rot)
 
-> Source of truth untuk task ini. Plan ini menimpa plan Fase 2&3 sebelumnya
-> (semua sudah ☑ & tercatat di `docs/06-task-plan.md` + CI hijau).
+> Basis: `review.md` (2026-08-24). Plan asli: `.kilo/plans/1787188342624-review-fixes.md`.
+> SEMUA temuan HIGH + item prioritas M diverifikasi ulang ke kode aktual oleh
+> planner — klaim review AKURAT. Eksekusi urut Fase A→G, 1 fase ≈ 1 commit.
+>
+> **Kontrak `EffectParams` TIDAK berubah** (`preservePitch` tetap ada;
+> validasi durasi memakai parameter IPC `totalDurationMs` yang sudah ada).
 
-## 0. SOURCE REFERENCES
-- `docs/02-scope-brief.md` — Definition of done: bisa di-install di mesin
-  bersih Windows & Linux; out-of-scope: code signing (ditunda).
-- `docs/08-qa-release-checklist.md` — checklist pra-rilis (human gate).
-- `.github/workflows/build-verify.yml` — sudah build 2 OS + upload artifact
-  (AppImage/deb/NSIS) tapi BELUM bikin GitHub Release; `on.push` cuma
-  `branches: [main]` + `paths` (tag tidak ke-trigger).
+## STATUS EKSEKUSI (final)
+- [x] **Fase A — H2**: reset `loadError/decoded/isPlaying` saat ganti file
+      → dinaikkan level: pola resmi React *adjust-state-during-render*
+      (`prevFilePath`), bukan setState di effect. Commit `[Review-H2]`.
+- [x] **Fase B — H1**: checkbox preserve-pitch `disabled` + tooltip jujur.
+      Commit `[Review-H1]`.
+- [x] **Fase C — H3**: clamp region di `useAudioStore.setRegion` +
+      validasi Rust `end_ms > total_duration_ms` → ditolak
+      (`AppError::InvalidParams`, pesan ID). Signature `build_filter_plan`
+      bertambah `total_duration_ms`; seluruh test lama ikut signature baru
+      (bukan downgrade) + 3 test baru (42 total). Commit `[Review-H3]`.
+- [x] **Fase D — M3+M1+M2**: `cancel()` set 'cancelled' hanya setelah IPC
+      sukses (gagal → status error, pesan ID); `syncRegionToWaveSurfer`
+      baca via `getState()`; compare path case-insensitive hanya untuk path
+      gaya Windows (drive-letter / navigator.platform) — Linux case-sensitive
+      tetap sah; vitest AC-04 lama lulus tanpa diubah. Commit `[Review-M3][M1][M2]`.
+- [x] **Fase E — H4/1**: CSP baseline
+      `default-src 'self'; img-src 'self' data:; style-src 'self'
+      'unsafe-inline'; media-src 'self' blob:` (blob: wajib utk WaveSurfer).
+      Scope fs `**` DEFERRED (paket dgn L7). Commit `[Review-H4/1]`.
+- [x] **Fase F — M7**: eslint flat config (`npm run lint`) + cargo fmt +
+      clippy `--all-targets --features tauri-runtime -- -D warnings` bersih;
+      langkah lint identik ditambah ke KEDUA job CI. Perbaikan eslint dilakukan
+      benar (bukan suppress): pola adjust-during-render di TimeInput &
+      WaveformView, pindah deklarasi fungsi sebelum efek, `argsIgnorePattern '^_'`.
+      Commit `[Review-M7/F1..F3]`.
+- [x] **Fase G — doc-rot + L6**: header status faktual di Cargo.toml/lib.rs/
+      export.rs; snippet Development README dipisah per direktori; test count
+      39→42 + bullet lint. Commit `[Review-Fase G]`.
 
-## 1. OBJECTIVE & SCOPE
-- **Tujuan:** tiap push tag `v*` otomatis build 2 OS (reuse langkah teruji)
-  lalu buat **GitHub Release** berisi installer (NSIS Windows, AppImage +
-  .deb Linux) sebagai asset.
-- **In scope (T5.1):** trigger tag + job `publish-release` di
-  `build-verify.yml` (additive, tidak ubah job build yang sudah hijau).
-- **Out of scope:** code signing/notarization (T0.7 ditunda — release
-  tetap UNSIGNED; sebutkan di release notes), manual QA checklist
-  (`08-qa-release-checklist.md`) adalah human gate sebelum ngetag.
+## DEFERRED (butuh persetujuan — jangan kerjakan diam-diam)
+M4 (clamp fade-in preview), M5 (satukan AudioContext), M6 (hint preview speed
++ hapus dead code `subscribeExportEvents`), M8 (unregister saat channel tutup
++ timeout hang), pengetatan scope fs `**` (H4/2, paket dgn L7), L1–L5/L8,
+keputusan library time-stretch, batas ukuran file v1, prettier.
 
-## 2. DESIGN
-- `on.push` tambah `tags: ['v*']` (branch `main` tetap). Path filter stale
-  (`linux-build-verify.yml` sudah dihapus) diperbaiki jadi `build-verify.yml`.
-- Job `publish-release`: `needs: [verify-linux-build, build-windows]`,
-  `if: startsWith(github.ref, 'refs/tags/v')`, `permissions: contents: write`.
-  Download kedua artifact (sudah di-upload di run yang sama) lalu
-  `softprops/action-gh-release@v2` dengan glob AppImage/deb/NSIS.
-- Tidak ubah logika build/FFmpeg/checksum — hanya mempublikasikan hasil.
+## VERIFIKASI AKHIR
+- [x] `cargo test` 42/42 · [x] `cargo build --features tauri-runtime` PASS
+- [x] `npm run build` PASS · [x] `npm run lint` PASS · [x] `npm test` 3/3
+- [x] `cargo fmt --check` + clippy `-D warnings` PASS (kedua feature set)
+- [ ] CI hijau dua OS (menunggu run setelah push)
+- [ ] Smoke manual GUI: ganti file, tooltip checkbox, End>durasi clamp,
+      cancel saat export, waveform/play/export dengan CSP aktif
 
-## 3. FILE BREAKDOWN
-- `.github/workflows/build-verify.yml` — **MODIFY**: `on.push.tags`, perbaiki
-  `paths`, tambah job `publish-release`.
-- `docs/06-task-plan.md` — **MODIFY**: centang T5.1 (+ T5.2 manual).
-
-## 4. VERIFICATION
-- Validasi YAML parse (python `yaml.safe_load`) sebelum commit.
-- Push → buat tag `v0.1.0` di GitHub → run harus: build hijau (2 OS) +
-  job `publish-release` hijau + GitHub Release muncul dengan 3 asset.
-- Catat di laporan: release UNSIGNED (T0.7 ditunda).
-
-## 5. EDGE CASES
-- Tag di-commit hanya ubah docs → `paths` bisa skip; release commit normal
-  ubah `package.json`/`Cargo.toml` (masuk `paths`) jadi aman. Kalau perlu
-  bypass, hapus `paths` (trade-off: build jalan untuk tiap push main).
-- `download-artifact` default ambil semua artifact run → glob ke subfolder
-  per nama artifact.
+## RISIKO YANG SUDAH DISELESAIKAN/DICATAT
+- Ripple signature `build_filter_plan` → semua test di-update sengaja,
+  dijelaskan di commit message (aturan kit #4).
+- CSP: baseline minimal sesuai plan; smoke manual GUI tetap disarankan.
+- Lint: tanpa suppress global — hanya konfigurasi konvensi `_arg` dan
+  off `no-explicit-any` di boundary IPC (terdokumentasi di config).

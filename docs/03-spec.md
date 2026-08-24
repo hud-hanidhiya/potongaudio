@@ -73,15 +73,19 @@ export gagal — user harus klik Save lagi secara eksplisit.
 - When: export dijalankan
 - Then: tidak crash; fade dimulai dari awal region (clamped)
 
-**AC-04 — Output path bentrok dengan input (error path, belum diimplementasi)**
+**AC-04 — Output path bentrok dengan input (didefinisikan & diimplementasi)**
 - Given: user pilih output path yang sama dengan file sumber
 - When: klik Save
-- Then: **[BELUM ADA PERILAKU YANG DIDEFINISIKAN]** — perlu diputuskan:
-  tolak otomatis, atau minta konfirmasi eksplisit
+- Then: export DITOLAK sebelum IPC/FFmpeg dijalankan, pesan error Bahasa
+  Indonesia ("Path output tidak boleh sama dengan file sumber…"). Keputusan
+  2026-08-24: tolak otomatis, bukan dialog konfirmasi. Ter-cover unit test
+  `useExportStore.test.ts`.
 
 ## Pertanyaan terbuka
 - Batas ukuran/durasi file maksimum v1 — belum diputuskan.
 - Library time-stretch untuk preview speed — belum divalidasi.
-- Perilaku saat output path == input path (AC-04) — belum diputuskan.
-- Mismatch lisensi project (GPL-3.0 di `LICENSE` vs sempat ada sebutan
-  MIT di landing) — perlu konfirmasi status terbaru.
+- Perilaku saat output path == input path (AC-04) — **diputuskan 2026-08-24**:
+  DITOLAK otomatis (pre-flight di `useExportStore.startExport`, case-insensitive
+  hanya untuk path gaya Windows); guardrail "Operasi file destruktif" terpenuhi.
+- Preservasi pitch export butuh `rubberband` (GPL) yang tidak ada di build
+  LGPL — checkbox UI dinonaktifkan sampai library time-stretch diputuskan.
