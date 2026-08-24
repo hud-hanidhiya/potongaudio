@@ -43,6 +43,13 @@ export function WaveformView() {
   useEffect(() => {
     if (!loadedFile) return;
 
+    // Reset state sebelumnya (H2): error file lama jangan menempel ke file
+    // baru, buffer lama jangan bisa diputar saat decode baru berjalan, dan
+    // label tombol kembali ke "Play".
+    setLoadError(false);
+    setDecoded(null);
+    setIsPlaying(false);
+
     let cancelled = false;
     let objectUrl: string | null = null;
     let ws: WaveSurfer | null = null;
