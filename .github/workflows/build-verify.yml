@@ -335,7 +335,12 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-22.04
     permissions:
+      # contents:write untuk `gh release create`; actions:read WAJIB untuk
+      # actions/download-artifact mengambil artifact dari run yang sama
+      # (menyebut permissions eksplisit membuat scope lain menjadi none —
+      # tanpa actions:read job ini gagal ±12s seperti di run #6).
       contents: write
+      actions: read
     steps:
       - name: Download build artifacts
         uses: actions/download-artifact@v5
