@@ -303,6 +303,10 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
+      # M7: lint gate frontend — sama seperti lokal (`npm run lint`).
+      - name: Lint frontend (eslint)
+        run: npm run lint
+
       - name: Build frontend
         run: npm run build
 
