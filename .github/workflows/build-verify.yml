@@ -95,10 +95,6 @@ jobs:
         working-directory: src-tauri
         run: cargo fmt --check
 
-      - name: cargo clippy (tauri-runtime, -D warnings)
-        working-directory: src-tauri
-        run: cargo clippy --all-targets --features tauri-runtime -- -D warnings
-
       # -----------------------------------------------------------------
       # 3. Download binary FFmpeg/FFprobe Linux — versi DIPIN, lihat
       #    catatan FFMPEG_RELEASE_TAG di atas.
@@ -140,6 +136,13 @@ jobs:
           cp ffmpeg-extracted/bin/ffprobe src-tauri/binaries/ffprobe-x86_64-unknown-linux-gnu
           chmod +x src-tauri/binaries/ffmpeg-x86_64-unknown-linux-gnu
           chmod +x src-tauri/binaries/ffprobe-x86_64-unknown-linux-gnu
+
+      # Clippy dengan feature tauri-runtime butuh binary sidecar SUDAH ADA
+      # (tauri-build memvalidasi externalBin saat build script) — makanya
+      # diletakkan setelah download, bukan sebelum.
+      - name: Lint Rust (clippy, tauri-runtime, -D warnings)
+        working-directory: src-tauri
+        run: cargo clippy --all-targets --features tauri-runtime -- -D warnings
 
       - name: Sanity check — binary FFmpeg/FFprobe jalan di runner ini
         # Test paling dasar: apakah binary yang di-download bahkan bisa
@@ -255,14 +258,11 @@ jobs:
         with:
           workspaces: "src-tauri -> target"
 
-      # M7: lint gate Rust — identik dengan lokal (fmt + clippy -D warnings).
+      # M7: lint gate Rust — fmt cepat tanpa compile; clippy dipindah ke
+      # setelah download sidecar (butuh externalBin ada).
       - name: Lint Rust (fmt)
         working-directory: src-tauri
         run: cargo fmt --check
-
-      - name: Lint Rust (clippy, -D warnings)
-        working-directory: src-tauri
-        run: cargo clippy --all-targets --features tauri-runtime -- -D warnings
 
       - name: cargo test (default features, tanpa Tauri)
         working-directory: src-tauri
@@ -293,6 +293,13 @@ jobs:
           $root = Get-ChildItem ffmpeg-extracted | Select-Object -First 1
           Copy-Item "$($root.FullName)/bin/ffmpeg.exe" "src-tauri/binaries/ffmpeg-x86_64-pc-windows-msvc.exe"
           Copy-Item "$($root.FullName)/bin/ffprobe.exe" "src-tauri/binaries/ffprobe-x86_64-pc-windows-msvc.exe"
+
+      # Clippy dengan feature tauri-runtime butuh binary sidecar SUDAH ADA
+      # (tauri-build memvalidasi externalBin saat build script) — makanya
+      # diletakkan setelah download, bukan sebelum.
+      - name: Lint Rust (clippy, tauri-runtime, -D warnings)
+        working-directory: src-tauri
+        run: cargo clippy --all-targets --features tauri-runtime -- -D warnings
 
       - name: Check FFmpeg & FFprobe
         shell: pwsh
