@@ -148,10 +148,9 @@ mod tauri_wiring {
             .spawn()
             .map_err(|e| AppError::SidecarSpawnFailed { detail: e.to_string() })?;
 
-        // TODO(Fase 3): JobRegistry sekarang mendukung `Killable` trait object
-        // yang dapat digunakan baik untuk `tokio::process::Child` (test) maupun
-        // `tauri_plugin_shell::process::CommandChild` (runtime). Silakan gunakan
-        // `registry.register(&job_id, Arc::new(Mutex::new(child)))`.
+        // Daftarkan child ke JobRegistry (dukung cancel lewat `Killable`,
+        // berlaku untuk `tauri_plugin_shell::process::CommandChild` di runtime
+        // maupun `tokio::process::Child` di test).
         registry
             .register(&job_id, Arc::new(Mutex::new(Some(child))))
             .await;

@@ -1,9 +1,17 @@
-# Implementation Plan: Fase 2 — WaveSurfer.js + Region Trim (T2.1–T2.4)
+# Implementation Plan: Fase 2 & 3 — WaveSurfer + Region Trim + Wiring Export (T2.1–T2.4, T3.1–T3.2, T4.1)
 
 > Source of truth untuk task ini. Plan ini menimpa template/plan sebelumnya
 > (T1.7/T1.8 sudah selesai & tercatat di `docs/06-task-plan.md` + CI hijau).
 > Kerjakan satu baris `docs/06-task-plan.md` per waktu; berhenti & lapor
 > setelah tiap sub-task.
+>
+> **Status Fase 3 (T3.1–T3.2, T4.1): SELESAI di kode & terverifikasi.** Wiring
+> IPC (`src/lib/ipc.ts`), `ExportDock`, `useExportStore`, dan command Rust
+> `export_audio`/`cancel_export` sudah ada & konsisten dengan kontrak
+> `EffectParams` (camelCase). Build hijau: `cargo build --features
+> tauri-runtime` + `npm run build`; `cargo test` 39/39. Sisa (bukan wiring):
+> AC-04 (output==input belum ditolak), preserve-pitch export butuh library
+> GPL (rubberband) — di luar build LGPL, lihat T2.5/spec.
 
 ## 0. SOURCE REFERENCES
 - `docs/03-spec.md` — Fitur #4 (waveform), #5 (trim single-region), #6

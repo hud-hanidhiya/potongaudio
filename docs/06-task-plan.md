@@ -38,8 +38,9 @@
 | T2.2 | Render waveform via WaveSurfer | `src/components/workspace/WaveformView.tsx` | Waveform tampil (bukan placeholder) setelah file dimuat; `npm run build` hijau | ☑ |
 | T2.3 | Region trim drag (RegionsPlugin) + two-way sync store | `src/components/workspace/WaveformView.tsx` | Drag handle mengubah `region` di store; edit TimeInput mengubah region di waveform | ☑ |
 | T2.4 | Polish: interact:false, styling token, clamp durasi | `src/components/workspace/WaveformView.tsx` | Klik waveform tidak autoplay bentrok Preview; region di-clamp ke durasi | ☑ |
-| T3.x | Wiring backend Rust penuh ke UI | `src/lib/ipc.ts` | — | ☐ |
-| T4.x | Integrasi frontend↔backend penuh | — | — | ☐ |
+| T3.1 | Wiring IPC export/cancel ke Rust | `src/lib/ipc.ts` | `invoke('export_audio', {...})` terhubung; event `export://progress\|done\|error` didengarkan; `cargo build --features tauri-runtime` + `npm run build` hijau | ☑ |
+| T3.2 | Save dialog native + startExport flow | `src/components/workspace/ExportDock.tsx`, `src/store/useExportStore.ts` | Klik Save → `pickSaveLocation` → `exportAudio` dengan EffectParams; progress & cancel tersambung | ☑ |
+| T4.1 | Integrasi penuh frontend↔backend (status idle→running→done/error/cancelled) | `ExportDock.tsx`, `useExportStore.ts`, `ipc.ts` | Alur export end-to-end konsisten & ter-compile; `EffectParams` TS↔Rust cocok (camelCase) | ☑ |
 | T5.x | Packaging & release | `.github/workflows/` | — | ☐ |
 
 ## Backlog v2 (jangan dikerjakan sekarang)
